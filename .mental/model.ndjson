@@ -3,3 +3,7 @@
 {"type":"capability","name":"Checkout","description":"Completes a purchase","operates_on":["User","Order"],"timestamp":"2026-01-20T00:02:00Z"}
 {"type":"decision","id":"dec-001","what":"Soft deletes instead of hard deletes","why":"Maintain audit trail and allow recovery","when":"2026-01-20T00:03:00Z","relates_to":{"domains":["Order"]}}
 {"type":"aspect","name":"Auth","description":"Authentication and authorization","applies_to":{"capabilities":["Checkout"]},"timestamp":"2026-01-20T00:04:00Z"}
+{"type":"domain","timestamp":"2026-01-19T23:02:50.949Z","name":"Payment","description":"A financial transaction","references":["Order"]}
+{"type":"capability","timestamp":"2026-01-19T23:03:09.536Z","name":"ProcessPayment","description":"Processes a payment transaction","operates_on":["Payment","Order"]}
+{"type":"decision","timestamp":"2026-01-19T23:03:14.474Z","id":"dec-1768863794474","what":"Use Stripe for payment processing","why":"Proven reliability and great developer experience","when":"2026-01-19T23:03:14.474Z","relates_to":{}}
+{"type":"aspect","timestamp":"2026-01-19T23:03:18.784Z","name":"Logging","description":"Application logging and monitoring"}

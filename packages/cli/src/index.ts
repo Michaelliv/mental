@@ -11,6 +11,7 @@ import { addCapability } from './commands/add-capability';
 import { addAspect } from './commands/add-aspect';
 import { addDecision } from './commands/add-decision';
 import { show } from './commands/show';
+import { graph } from './commands/graph';
 
 const program = new Command();
 
@@ -69,13 +70,10 @@ program
   .option('--json', 'Output JSON')
   .action(show);
 
-// Graph command (placeholder for now)
+// Graph command
 program
   .command('graph')
   .description('Open interactive graph visualization')
-  .action(() => {
-    console.log('Graph visualization coming soon!');
-    console.log('This will start a local server and open your browser.');
-  });
+  .action(graph);
 
 program.parse();

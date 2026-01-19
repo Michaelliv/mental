@@ -1,0 +1,31 @@
+{
+  "name": "@mentalmodel/web",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "vite": "^7.3.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@mentalmodel/shared": "workspace:*",
+    "framer-motion": "^12.27.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "shiki": "^3.21.0"
+  }
+}

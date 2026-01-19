@@ -108,7 +108,7 @@ The mental model is the contract between agent speed and human understanding.
 
 - Website: [mentalmodel.sh](https://mentalmodel.sh)
 - npm: [@mentalmodel/cli](https://www.npmjs.com/package/@mentalmodel/cli)
-- GitHub: [mentalmodel-sh/mental](https://github.com/mentalmodel-sh/mental)
+- GitHub: [Michaelliv/mental](https://github.com/Michaelliv/mental)
 
 ## License
 

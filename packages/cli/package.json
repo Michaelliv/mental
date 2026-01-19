@@ -1,0 +1,18 @@
+{
+  "name": "@mentalmodel/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "mental": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node"
+  },
+  "dependencies": {
+    "@mentalmodel/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "mental",
+  "version": "0.1.0",
+  "description": "The mental model layer for agent-written code",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "bun run --watch packages/cli/src/index.ts",
+    "build": "bun run packages/cli/build.ts && bun run packages/web/build.ts",
+    "web:dev": "cd packages/web && bun run dev"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "author": "Mental Model",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mentalmodel-sh/mental.git"
+  },
+  "homepage": "https://mentalmodel.sh"
+}

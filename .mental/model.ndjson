@@ -1,0 +1,5 @@
+{"type":"domain","name":"User","description":"A person with an account","timestamp":"2026-01-20T00:00:00Z"}
+{"type":"domain","name":"Order","description":"A purchase transaction","references":["User"],"timestamp":"2026-01-20T00:01:00Z"}
+{"type":"capability","name":"Checkout","description":"Completes a purchase","operates_on":["User","Order"],"timestamp":"2026-01-20T00:02:00Z"}
+{"type":"decision","id":"dec-001","what":"Soft deletes instead of hard deletes","why":"Maintain audit trail and allow recovery","when":"2026-01-20T00:03:00Z","relates_to":{"domains":["Order"]}}
+{"type":"aspect","name":"Auth","description":"Authentication and authorization","applies_to":{"capabilities":["Checkout"]},"timestamp":"2026-01-20T00:04:00Z"}

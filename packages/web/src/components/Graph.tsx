@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useCallback, useMemo } from 'react';
 import type { GraphData, GraphNode } from '@mentalmodel/shared';
+import { NodeCard } from './NodeCard';
 
 interface GraphProps {
   data: GraphData;
@@ -8,110 +8,79 @@ interface GraphProps {
   onSelectNode: (node: GraphNode | null) => void;
 }
 
-interface LayoutNode extends GraphNode {
+interface NodePosition {
   x: number;
   y: number;
+  width: number;
+  height: number;
 }
 
 export function Graph({ data, selectedNode, onSelectNode }: GraphProps) {
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [nodePositions, setNodePositions] = useState<Map<string, NodePosition>>(new Map());
 
-  // Layout algorithm: three horizontal layers
-  const layoutNodes = useMemo(() => {
-    const layers = {
-      aspect: data.nodes.filter((n) => n.type === 'aspect'),
-      capability: data.nodes.filter((n) => n.type === 'capability'),
-      domain: data.nodes.filter((n) => n.type === 'domain'),
-    };
+  // Group nodes by type
+  const layers = useMemo(() => ({
+    aspects: data.nodes.filter(n => n.type === 'aspect'),
+    capabilities: data.nodes.filter(n => n.type === 'capability'),
+    domains: data.nodes.filter(n => n.type === 'domain'),
+  }), [data.nodes]);
 
-    const layerY = { aspect: 100, capability: 300, domain: 500 };
-    const nodeSpacing = 180;
-    const startX = 100;
+  // Track node positions for SVG lines
+  const handleNodeMount = useCallback((id: string, element: HTMLDivElement) => {
+    const rect = element.getBoundingClientRect();
+    const containerRect = element.offsetParent?.getBoundingClientRect();
+    if (!containerRect) return;
 
-    const positioned: LayoutNode[] = [];
+    setNodePositions(prev => new Map(prev).set(id, {
+      x: rect.left - containerRect.left + rect.width / 2,
+      y: rect.top - containerRect.top + rect.height / 2,
+      width: rect.width,
+      height: rect.height,
+    }));
+  }, []);
 
-    // Position aspects
-    layers.aspect.forEach((node, i) => {
-      positioned.push({
-        ...node,
-        x: startX + i * nodeSpacing,
-        y: layerY.aspect,
-      });
+  // Determine highlighted nodes
+  const highlightedNodes = useMemo(() => {
+    if (!selectedNode) return new Set(data.nodes.map(n => n.id));
+
+    const highlighted = new Set([selectedNode.id]);
+
+    // Add connected nodes
+    data.edges.forEach(edge => {
+      if (edge.from === selectedNode.id) highlighted.add(edge.to);
+      if (edge.to === selectedNode.id) highlighted.add(edge.from);
     });
 
-    // Position capabilities
-    layers.capability.forEach((node, i) => {
-      positioned.push({
-        ...node,
-        x: startX + i * nodeSpacing,
-        y: layerY.capability,
-      });
-    });
-
-    // Position domains
-    layers.domain.forEach((node, i) => {
-      positioned.push({
-        ...node,
-        x: startX + i * nodeSpacing,
-        y: layerY.domain,
-      });
-    });
-
-    return positioned;
-  }, [data]);
-
-  const isNodeHighlighted = (nodeId: string) => {
-    if (!selectedNode && !hoveredNode) return true;
-    const targetId = selectedNode?.id || hoveredNode;
-    if (nodeId === targetId) return true;
-
-    // Highlight connected nodes
-    const connectedEdges = data.edges.filter(
-      (e) => e.from === targetId || e.to === targetId
-    );
-    return connectedEdges.some((e) => e.from === nodeId || e.to === nodeId);
-  };
-
-  const getNodeById = (id: string) => layoutNodes.find((n) => n.id === id);
+    return highlighted;
+  }, [selectedNode, data.nodes, data.edges]);
 
   return (
-    <div className="flex-1 relative bg-gray-950">
-      {/* Layer labels */}
-      <div className="absolute left-4 top-20 text-purple-400 text-sm font-semibold">
-        ASPECTS
-      </div>
-      <div className="absolute left-4 top-[270px] text-blue-400 text-sm font-semibold">
-        CAPABILITIES
-      </div>
-      <div className="absolute left-4 top-[470px] text-green-400 text-sm font-semibold">
-        DOMAINS
-      </div>
-
-      <svg className="w-full h-full">
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0, 10 3.5, 0 7" fill="#4b5563" />
-          </marker>
-        </defs>
-
-        {/* Edges */}
-        <g>
+    <div className="flex-1 relative overflow-auto bg-gray-950">
+      {/* Container for nodes */}
+      <div className="relative min-h-screen p-12">
+        {/* SVG overlay for connections */}
+        <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="8"
+              markerHeight="6"
+              refX="8"
+              refY="3"
+              orient="auto"
+            >
+              <polygon points="0 0, 8 3, 0 6" fill="#4b5563" />
+            </marker>
+          </defs>
           {data.edges.map((edge, i) => {
-            const from = getNodeById(edge.from);
-            const to = getNodeById(edge.to);
+            const from = nodePositions.get(edge.from);
+            const to = nodePositions.get(edge.to);
             if (!from || !to) return null;
 
-            const highlighted = isNodeHighlighted(edge.from) && isNodeHighlighted(edge.to);
+            const highlighted = highlightedNodes.has(edge.from) && highlightedNodes.has(edge.to);
 
             return (
-              <motion.line
+              <line
                 key={i}
                 x1={from.x}
                 y1={from.y}
@@ -120,62 +89,89 @@ export function Graph({ data, selectedNode, onSelectNode }: GraphProps) {
                 stroke={highlighted ? '#6b7280' : '#1f2937'}
                 strokeWidth={highlighted ? 2 : 1}
                 markerEnd="url(#arrowhead)"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: i * 0.02 }}
               />
             );
           })}
-        </g>
+        </svg>
 
-        {/* Nodes */}
-        <g>
-          {layoutNodes.map((node, i) => {
-            const highlighted = isNodeHighlighted(node.id);
-            const selected = selectedNode?.id === node.id;
-            const colors = {
-              domain: '#10b981',
-              capability: '#3b82f6',
-              aspect: '#a855f7',
-            };
-
-            return (
-              <g key={node.id}>
-                <motion.circle
-                  cx={node.x}
-                  cy={node.y}
-                  r={selected ? 32 : 28}
-                  fill={highlighted ? colors[node.type] : '#1f2937'}
-                  stroke={selected ? '#ffffff' : colors[node.type]}
-                  strokeWidth={selected ? 3 : 2}
-                  className="cursor-pointer"
+        {/* Layer: Aspects */}
+        <div className="mb-16" style={{ zIndex: 1, position: 'relative' }}>
+          <div className="mb-4">
+            <h2 className="text-xs font-semibold tracking-wider text-purple-500 uppercase">
+              Aspects
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">Cross-cutting concerns that apply across capabilities</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {layers.aspects.length === 0 ? (
+              <div className="text-gray-600 text-sm italic">No aspects defined yet</div>
+            ) : (
+              layers.aspects.map(node => (
+                <NodeCard
+                  key={node.id}
+                  node={node}
+                  selected={selectedNode?.id === node.id}
+                  highlighted={highlightedNodes.has(node.id)}
                   onClick={() => onSelectNode(node)}
-                  onMouseEnter={() => setHoveredNode(node.id)}
-                  onMouseLeave={() => setHoveredNode(null)}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: i * 0.05 }}
-                  whileHover={{ scale: 1.1 }}
+                  onMount={handleNodeMount}
                 />
-                <motion.text
-                  x={node.x}
-                  y={node.y + 50}
-                  textAnchor="middle"
-                  fill={highlighted ? '#ffffff' : '#4b5563'}
-                  fontSize="14"
-                  fontWeight="500"
-                  className="pointer-events-none select-none"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3, delay: i * 0.05 + 0.2 }}
-                >
-                  {node.label}
-                </motion.text>
-              </g>
-            );
-          })}
-        </g>
-      </svg>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Layer: Capabilities */}
+        <div className="mb-16" style={{ zIndex: 1, position: 'relative' }}>
+          <div className="mb-4">
+            <h2 className="text-xs font-semibold tracking-wider text-blue-500 uppercase">
+              Capabilities
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">What the system does - actions and operations</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {layers.capabilities.length === 0 ? (
+              <div className="text-gray-600 text-sm italic">No capabilities defined yet</div>
+            ) : (
+              layers.capabilities.map(node => (
+                <NodeCard
+                  key={node.id}
+                  node={node}
+                  selected={selectedNode?.id === node.id}
+                  highlighted={highlightedNodes.has(node.id)}
+                  onClick={() => onSelectNode(node)}
+                  onMount={handleNodeMount}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Layer: Domains */}
+        <div className="mb-16" style={{ zIndex: 1, position: 'relative' }}>
+          <div className="mb-4">
+            <h2 className="text-xs font-semibold tracking-wider text-emerald-500 uppercase">
+              Domains
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">What the system is about - core entities and concepts</p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {layers.domains.length === 0 ? (
+              <div className="text-gray-600 text-sm italic">No domains defined yet</div>
+            ) : (
+              layers.domains.map(node => (
+                <NodeCard
+                  key={node.id}
+                  node={node}
+                  selected={selectedNode?.id === node.id}
+                  highlighted={highlightedNodes.has(node.id)}
+                  onClick={() => onSelectNode(node)}
+                  onMount={handleNodeMount}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

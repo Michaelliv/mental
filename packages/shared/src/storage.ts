@@ -1,26 +1,131 @@
 /**
- * Storage layer for mental model
+ * Storage layer for mental model - Event Sourcing
  * Uses NDJSON format in .mental/model.ndjson
  *
- * Mutation strategy:
- * - UPDATE: Append new version of entity (latest timestamp wins)
- * - DELETE: Append entity with deleted: true (tombstone)
- * - RENAME: Append old entity with deleted: true, then append new entity
+ * Event types:
+ * - EntityCreated: Full payload when entity first added
+ * - EntityUpdated: Field-level changes with operations (set, unset, array_add, array_remove)
+ * - EntityDeleted: Removes entity from model
+ * - EntityRenamed: Renames entity with optional cascade to references
  */
 
-import type { Domain, Capability, Aspect, Decision, MentalModel } from './types';
-
-export type EntityRecord =
-  | (Domain & { type: 'domain'; timestamp: string })
-  | (Capability & { type: 'capability'; timestamp: string })
-  | (Aspect & { type: 'aspect'; timestamp: string })
-  | (Decision & { type: 'decision'; timestamp: string });
+import type {
+  Domain,
+  Capability,
+  Aspect,
+  Decision,
+  MentalModel,
+  ModelEvent,
+  EntityCreatedEvent,
+  EntityUpdatedEvent,
+  EntityDeletedEvent,
+  EntityRenamedEvent,
+  FieldOperation,
+  EntityType,
+} from './types';
+import { CURRENT_EVENT_VERSION } from './types';
 
 /**
- * Parse NDJSON file into mental model
- * Latest record wins (by timestamp + name/id)
+ * Apply a field operation to a value
  */
-export function parseNDJSON(content: string): MentalModel {
+function applyFieldOperation(
+  currentValue: unknown,
+  operation: FieldOperation
+): unknown {
+  switch (operation.op) {
+    case 'set':
+      return operation.value;
+    case 'unset':
+      return undefined;
+    case 'array_add': {
+      const arr = Array.isArray(currentValue) ? currentValue : [];
+      return [...arr, ...operation.values];
+    }
+    case 'array_remove': {
+      const arr = Array.isArray(currentValue) ? currentValue : [];
+      const toRemove = new Set(operation.values);
+      return arr.filter((v) => !toRemove.has(v));
+    }
+  }
+}
+
+/**
+ * Get entity ID from an entity (name for most, id for decisions)
+ */
+function getEntityId(entityType: EntityType, entity: Domain | Capability | Aspect | Decision): string {
+  if (entityType === 'decision') {
+    return (entity as Decision).id;
+  }
+  return (entity as Domain | Capability | Aspect).name;
+}
+
+/**
+ * Update references in an entity when another entity is renamed
+ */
+function updateReferencesInEntity(
+  entity: Domain | Capability | Aspect | Decision,
+  entityType: EntityType,
+  renamedEntityType: EntityType,
+  oldName: string,
+  newName: string
+): void {
+  const replaceInArray = (arr: string[] | undefined): string[] | undefined => {
+    if (!arr) return arr;
+    return arr.map((v) => (v === oldName ? newName : v));
+  };
+
+  switch (entityType) {
+    case 'domain': {
+      const domain = entity as Domain;
+      if (renamedEntityType === 'domain') {
+        domain.references = replaceInArray(domain.references);
+      }
+      break;
+    }
+    case 'capability': {
+      const capability = entity as Capability;
+      if (renamedEntityType === 'domain') {
+        capability.operates_on = replaceInArray(capability.operates_on);
+      } else if (renamedEntityType === 'capability') {
+        capability.composes = replaceInArray(capability.composes);
+      }
+      break;
+    }
+    case 'aspect': {
+      const aspect = entity as Aspect;
+      if (aspect.applies_to) {
+        if (renamedEntityType === 'capability') {
+          aspect.applies_to.capabilities = replaceInArray(aspect.applies_to.capabilities);
+        } else if (renamedEntityType === 'domain') {
+          aspect.applies_to.domains = replaceInArray(aspect.applies_to.domains);
+        }
+      }
+      break;
+    }
+    case 'decision': {
+      const decision = entity as Decision;
+      if (decision.relates_to) {
+        if (renamedEntityType === 'domain') {
+          decision.relates_to.domains = replaceInArray(decision.relates_to.domains);
+        } else if (renamedEntityType === 'capability') {
+          decision.relates_to.capabilities = replaceInArray(decision.relates_to.capabilities);
+        } else if (renamedEntityType === 'aspect') {
+          decision.relates_to.aspects = replaceInArray(decision.relates_to.aspects);
+        }
+      }
+      break;
+    }
+  }
+}
+
+/**
+ * Parse NDJSON event stream into mental model
+ * Replays events to reconstruct current state
+ *
+ * @param content - NDJSON content
+ * @param asOfTimestamp - Optional timestamp to reconstruct state at a point in time
+ */
+export function parseNDJSON(content: string, asOfTimestamp?: string): MentalModel {
   const lines = content.trim().split('\n').filter(Boolean);
 
   const domains: Record<string, Domain> = {};
@@ -32,52 +137,152 @@ export function parseNDJSON(content: string): MentalModel {
 
   for (const line of lines) {
     try {
-      const record = JSON.parse(line) as EntityRecord;
+      const event = JSON.parse(line) as ModelEvent;
 
-      if (record.timestamp > lastUpdated) {
-        lastUpdated = record.timestamp;
+      // Skip events after the requested timestamp (for time-travel)
+      if (asOfTimestamp && event.timestamp > asOfTimestamp) {
+        continue;
       }
 
-      switch (record.type) {
-        case 'domain': {
-          const { type, timestamp, ...domain } = record;
-          if (domain.deleted) {
-            delete domains[domain.name];
-          } else {
-            domains[domain.name] = domain;
+      if (event.timestamp > lastUpdated) {
+        lastUpdated = event.timestamp;
+      }
+
+      switch (event.eventType) {
+        case 'EntityCreated': {
+          const created = event as EntityCreatedEvent;
+          switch (created.entityType) {
+            case 'domain':
+              domains[created.entityId] = created.payload as Domain;
+              break;
+            case 'capability':
+              capabilities[created.entityId] = created.payload as Capability;
+              break;
+            case 'aspect':
+              aspects[created.entityId] = created.payload as Aspect;
+              break;
+            case 'decision':
+              decisions[created.entityId] = created.payload as Decision;
+              break;
           }
           break;
         }
-        case 'capability': {
-          const { type, timestamp, ...capability } = record;
-          if (capability.deleted) {
-            delete capabilities[capability.name];
-          } else {
-            capabilities[capability.name] = capability;
+
+        case 'EntityUpdated': {
+          const updated = event as EntityUpdatedEvent;
+          let entity: Record<string, unknown> | undefined;
+
+          switch (updated.entityType) {
+            case 'domain':
+              entity = domains[updated.entityId] as unknown as Record<string, unknown>;
+              break;
+            case 'capability':
+              entity = capabilities[updated.entityId] as unknown as Record<string, unknown>;
+              break;
+            case 'aspect':
+              entity = aspects[updated.entityId] as unknown as Record<string, unknown>;
+              break;
+            case 'decision':
+              entity = decisions[updated.entityId] as unknown as Record<string, unknown>;
+              break;
+          }
+
+          if (entity) {
+            for (const [field, operation] of Object.entries(updated.payload.changes)) {
+              const newValue = applyFieldOperation(entity[field], operation);
+              if (newValue === undefined) {
+                delete entity[field];
+              } else {
+                entity[field] = newValue;
+              }
+            }
           }
           break;
         }
-        case 'aspect': {
-          const { type, timestamp, ...aspect } = record;
-          if (aspect.deleted) {
-            delete aspects[aspect.name];
-          } else {
-            aspects[aspect.name] = aspect;
+
+        case 'EntityDeleted': {
+          const deleted = event as EntityDeletedEvent;
+          switch (deleted.entityType) {
+            case 'domain':
+              delete domains[deleted.entityId];
+              break;
+            case 'capability':
+              delete capabilities[deleted.entityId];
+              break;
+            case 'aspect':
+              delete aspects[deleted.entityId];
+              break;
+            case 'decision':
+              delete decisions[deleted.entityId];
+              break;
           }
           break;
         }
-        case 'decision': {
-          const { type, timestamp, ...decision } = record;
-          if (decision.deleted) {
-            delete decisions[decision.id];
-          } else {
-            decisions[decision.id] = decision;
+
+        case 'EntityRenamed': {
+          const renamed = event as EntityRenamedEvent;
+          const { oldName, newName, cascadeReferences } = renamed.payload;
+
+          // Move entity to new key
+          switch (renamed.entityType) {
+            case 'domain': {
+              const domain = domains[oldName];
+              if (domain) {
+                domain.name = newName;
+                domains[newName] = domain;
+                delete domains[oldName];
+              }
+              break;
+            }
+            case 'capability': {
+              const capability = capabilities[oldName];
+              if (capability) {
+                capability.name = newName;
+                capabilities[newName] = capability;
+                delete capabilities[oldName];
+              }
+              break;
+            }
+            case 'aspect': {
+              const aspect = aspects[oldName];
+              if (aspect) {
+                aspect.name = newName;
+                aspects[newName] = aspect;
+                delete aspects[oldName];
+              }
+              break;
+            }
+            case 'decision': {
+              const decision = decisions[oldName];
+              if (decision) {
+                decision.id = newName;
+                decisions[newName] = decision;
+                delete decisions[oldName];
+              }
+              break;
+            }
+          }
+
+          // Cascade references if requested
+          if (cascadeReferences) {
+            for (const domain of Object.values(domains)) {
+              updateReferencesInEntity(domain, 'domain', renamed.entityType, oldName, newName);
+            }
+            for (const capability of Object.values(capabilities)) {
+              updateReferencesInEntity(capability, 'capability', renamed.entityType, oldName, newName);
+            }
+            for (const aspect of Object.values(aspects)) {
+              updateReferencesInEntity(aspect, 'aspect', renamed.entityType, oldName, newName);
+            }
+            for (const decision of Object.values(decisions)) {
+              updateReferencesInEntity(decision, 'decision', renamed.entityType, oldName, newName);
+            }
           }
           break;
         }
       }
     } catch (error) {
-      console.error('Failed to parse line:', line, error);
+      console.error('Failed to parse event:', line, error);
     }
   }
 
@@ -92,17 +297,136 @@ export function parseNDJSON(content: string): MentalModel {
 }
 
 /**
- * Serialize entity to NDJSON line
+ * Serialize an event to NDJSON line
  */
-export function serializeEntity(
-  type: 'domain' | 'capability' | 'aspect' | 'decision',
-  entity: Domain | Capability | Aspect | Decision
-): string {
-  const record: EntityRecord = {
-    type,
-    timestamp: new Date().toISOString(),
-    ...entity,
-  } as EntityRecord;
+export function serializeEvent(event: ModelEvent): string {
+  return JSON.stringify(event);
+}
 
-  return JSON.stringify(record);
+/**
+ * Create an EntityCreated event
+ */
+export function createEntityCreatedEvent(
+  entityType: EntityType,
+  entity: Domain | Capability | Aspect | Decision
+): EntityCreatedEvent {
+  return {
+    eventType: 'EntityCreated',
+    entityType,
+    entityId: getEntityId(entityType, entity),
+    timestamp: new Date().toISOString(),
+    version: CURRENT_EVENT_VERSION,
+    payload: entity,
+  };
+}
+
+/**
+ * Create an EntityUpdated event
+ */
+export function createEntityUpdatedEvent(
+  entityType: EntityType,
+  entityId: string,
+  changes: Record<string, FieldOperation>
+): EntityUpdatedEvent {
+  return {
+    eventType: 'EntityUpdated',
+    entityType,
+    entityId,
+    timestamp: new Date().toISOString(),
+    version: CURRENT_EVENT_VERSION,
+    payload: { changes },
+  };
+}
+
+/**
+ * Create an EntityDeleted event
+ */
+export function createEntityDeletedEvent(
+  entityType: EntityType,
+  entityId: string
+): EntityDeletedEvent {
+  return {
+    eventType: 'EntityDeleted',
+    entityType,
+    entityId,
+    timestamp: new Date().toISOString(),
+    version: CURRENT_EVENT_VERSION,
+    payload: {},
+  };
+}
+
+/**
+ * Create an EntityRenamed event
+ */
+export function createEntityRenamedEvent(
+  entityType: EntityType,
+  oldName: string,
+  newName: string,
+  cascadeReferences: boolean
+): EntityRenamedEvent {
+  return {
+    eventType: 'EntityRenamed',
+    entityType,
+    entityId: oldName,
+    timestamp: new Date().toISOString(),
+    version: CURRENT_EVENT_VERSION,
+    payload: {
+      oldName,
+      newName,
+      cascadeReferences,
+    },
+  };
+}
+
+/**
+ * Compute array changes between old and new arrays
+ */
+export function computeArrayChanges(
+  oldArr: string[] | undefined,
+  newArr: string[] | undefined
+): FieldOperation | null {
+  const old = oldArr || [];
+  const updated = newArr || [];
+
+  // No change
+  if (JSON.stringify(old) === JSON.stringify(updated)) {
+    return null;
+  }
+
+  const oldSet = new Set(old);
+  const newSet = new Set(updated);
+
+  const added = updated.filter((x) => !oldSet.has(x));
+  const removed = old.filter((x) => !newSet.has(x));
+
+  // Pure addition
+  if (added.length > 0 && removed.length === 0) {
+    return { op: 'array_add', values: added };
+  }
+
+  // Pure removal
+  if (removed.length > 0 && added.length === 0) {
+    return { op: 'array_remove', values: removed };
+  }
+
+  // Mixed changes - replace all
+  return { op: 'set', value: updated };
+}
+
+/**
+ * Compute scalar changes between old and new values
+ */
+export function computeScalarChange(
+  oldValue: unknown,
+  newValue: unknown
+): FieldOperation | null {
+  if (oldValue === newValue) {
+    return null;
+  }
+
+  if (newValue === undefined || newValue === null) {
+    return { op: 'unset' };
+  }
+
+  return { op: 'set', value: newValue };
 }

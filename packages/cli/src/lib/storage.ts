@@ -1,14 +1,54 @@
 /**
  * File system operations for mental model storage
+ *
+ * Provides a Storage interface that can be injected into commands,
+ * enabling testing without filesystem access.
  */
 
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, appendFileSync } from 'fs';
-import { parseNDJSON, serializeEntity, type EntityRecord } from '@mentalmodel/shared';
-import type { MentalModel, Domain, Capability, Aspect, Decision } from '@mentalmodel/shared';
+import {
+  parseNDJSON,
+  serializeEvent,
+  createEntityCreatedEvent,
+  createEntityDeletedEvent,
+  createEntityRenamedEvent,
+  createEntityUpdatedEvent,
+  computeArrayChanges,
+  computeScalarChange,
+} from '@mentalmodel/shared';
+import type {
+  MentalModel,
+  ModelEvent,
+  EntityType,
+  FieldOperation,
+} from '@mentalmodel/shared';
 
 const MENTAL_DIR = '.mental';
 const MODEL_FILE = 'model.ndjson';
+
+// ============================================================================
+// Storage Interface
+// ============================================================================
+
+/**
+ * Storage interface for reading/writing mental model data
+ * This abstraction allows commands to be tested without filesystem access
+ */
+export interface Storage {
+  /** Read the current mental model state */
+  readModel(): MentalModel;
+  /** Append an event to the event log */
+  appendEvent(event: ModelEvent): void;
+  /** Append multiple events to the event log */
+  appendEvents(events: ModelEvent[]): void;
+  /** Check if the model file exists/is initialized */
+  isInitialized(): boolean;
+}
+
+// ============================================================================
+// File System Storage Implementation
+// ============================================================================
 
 /**
  * Get path to mental model directory
@@ -41,43 +81,102 @@ export function initMentalDir(cwd: string = process.cwd()): void {
 }
 
 /**
- * Read mental model from disk
+ * Create a file system storage implementation
  */
-export function readModel(cwd: string = process.cwd()): MentalModel {
-  const modelPath = getModelPath(cwd);
+export function createFileStorage(cwd: string = process.cwd()): Storage {
+  return {
+    readModel(): MentalModel {
+      const modelPath = getModelPath(cwd);
 
-  if (!existsSync(modelPath)) {
-    return {
-      domains: {},
-      capabilities: {},
-      aspects: {},
-      decisions: {},
-      version: '0.1.0',
-      lastUpdated: new Date().toISOString(),
-    };
-  }
+      if (!existsSync(modelPath)) {
+        return {
+          domains: {},
+          capabilities: {},
+          aspects: {},
+          decisions: {},
+          version: '0.1.0',
+          lastUpdated: new Date().toISOString(),
+        };
+      }
 
-  const content = readFileSync(modelPath, 'utf-8');
-  return parseNDJSON(content);
+      const content = readFileSync(modelPath, 'utf-8');
+      return parseNDJSON(content);
+    },
+
+    appendEvent(event: ModelEvent): void {
+      initMentalDir(cwd);
+      const modelPath = getModelPath(cwd);
+      const line = serializeEvent(event);
+      appendFileSync(modelPath, line + '\n');
+    },
+
+    appendEvents(events: ModelEvent[]): void {
+      if (events.length === 0) return;
+      initMentalDir(cwd);
+      const modelPath = getModelPath(cwd);
+      const lines = events.map(serializeEvent).join('\n');
+      appendFileSync(modelPath, lines + '\n');
+    },
+
+    isInitialized(): boolean {
+      return existsSync(getModelPath(cwd));
+    },
+  };
 }
+
+// Default file storage instance
+const defaultStorage = createFileStorage();
+
+// ============================================================================
+// Memory Storage Implementation (for testing)
+// ============================================================================
 
 /**
- * Append entity to model file
+ * Create an in-memory storage implementation for testing
+ * @param initialEvents - Optional initial events to seed the storage
  */
-export function appendEntity(
-  type: 'domain' | 'capability' | 'aspect' | 'decision',
-  entity: Domain | Capability | Aspect | Decision,
-  cwd: string = process.cwd()
-): void {
-  initMentalDir(cwd);
-  const modelPath = getModelPath(cwd);
-  const line = serializeEntity(type, entity);
-  appendFileSync(modelPath, line + '\n');
+export function createMemoryStorage(initialEvents: ModelEvent[] = []): Storage & { events: ModelEvent[] } {
+  const events = [...initialEvents];
+
+  return {
+    events,
+
+    readModel(): MentalModel {
+      if (events.length === 0) {
+        return {
+          domains: {},
+          capabilities: {},
+          aspects: {},
+          decisions: {},
+          version: '0.1.0',
+          lastUpdated: new Date().toISOString(),
+        };
+      }
+      const content = events.map(serializeEvent).join('\n');
+      return parseNDJSON(content);
+    },
+
+    appendEvent(event: ModelEvent): void {
+      events.push(event);
+    },
+
+    appendEvents(newEvents: ModelEvent[]): void {
+      events.push(...newEvents);
+    },
+
+    isInitialized(): boolean {
+      return true;
+    },
+  };
 }
 
-/**
- * Check if mental model is initialized
- */
-export function isInitialized(cwd: string = process.cwd()): boolean {
-  return existsSync(getModelPath(cwd));
-}
+// Re-export event creators and helpers for convenience
+export {
+  createEntityCreatedEvent,
+  createEntityDeletedEvent,
+  createEntityRenamedEvent,
+  createEntityUpdatedEvent,
+  computeArrayChanges,
+  computeScalarChange,
+};
+export type { EntityType, FieldOperation };

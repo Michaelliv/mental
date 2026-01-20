@@ -10,8 +10,10 @@ import { addDomain } from './commands/add-domain';
 import { addCapability } from './commands/add-capability';
 import { addAspect } from './commands/add-aspect';
 import { addDecision } from './commands/add-decision';
+import { deleteEntity } from './commands/delete';
+import { updateDomain, updateCapability, updateAspect } from './commands/update';
 import { show } from './commands/show';
-import { graph } from './commands/graph';
+import { view } from './commands/view';
 
 const program = new Command();
 
@@ -63,6 +65,74 @@ add
   .option('--json', 'Output JSON')
   .action(addDecision);
 
+// Delete command group
+const del = program.command('delete').description('Delete entities from the mental model');
+
+del
+  .command('domain <name>')
+  .description('Delete a domain')
+  .option('--json', 'Output JSON')
+  .action((name, options) => deleteEntity('domain', name, options));
+
+del
+  .command('capability <name>')
+  .description('Delete a capability')
+  .option('--json', 'Output JSON')
+  .action((name, options) => deleteEntity('capability', name, options));
+
+del
+  .command('aspect <name>')
+  .description('Delete an aspect')
+  .option('--json', 'Output JSON')
+  .action((name, options) => deleteEntity('aspect', name, options));
+
+del
+  .command('decision <id>')
+  .description('Delete a decision')
+  .option('--json', 'Output JSON')
+  .action((id, options) => deleteEntity('decision', id, options));
+
+// Update command group
+const update = program.command('update').description('Update entities in the mental model');
+
+update
+  .command('domain <name>')
+  .description('Update a domain')
+  .option('-n, --name <newName>', 'Rename the domain')
+  .option('-d, --desc <description>', 'New description')
+  .option('--description <description>', 'New description (alias)')
+  .option('-r, --refs <references>', 'New references (comma-separated)')
+  .option('--references <references>', 'New references (alias)')
+  .option('-f, --files <files>', 'New files (comma-separated)')
+  .option('--cascade', 'Update references in other entities when renaming')
+  .option('--json', 'Output JSON')
+  .action(updateDomain);
+
+update
+  .command('capability <name>')
+  .description('Update a capability')
+  .option('-n, --name <newName>', 'Rename the capability')
+  .option('-d, --desc <description>', 'New description')
+  .option('--description <description>', 'New description (alias)')
+  .option('-o, --operates-on <domains>', 'New operates-on (comma-separated)')
+  .option('--composes <capabilities>', 'New composes (comma-separated)')
+  .option('-f, --files <files>', 'New files (comma-separated)')
+  .option('--cascade', 'Update references in other entities when renaming')
+  .option('--json', 'Output JSON')
+  .action(updateCapability);
+
+update
+  .command('aspect <name>')
+  .description('Update an aspect')
+  .option('-n, --name <newName>', 'Rename the aspect')
+  .option('-d, --desc <description>', 'New description')
+  .option('--description <description>', 'New description (alias)')
+  .option('-a, --applies-to <targets>', 'New applies-to (comma-separated)')
+  .option('-f, --files <files>', 'New files (comma-separated)')
+  .option('--cascade', 'Update references in other entities when renaming')
+  .option('--json', 'Output JSON')
+  .action(updateAspect);
+
 // Show command
 program
   .command('show')
@@ -70,10 +140,10 @@ program
   .option('--json', 'Output JSON')
   .action(show);
 
-// Graph command
+// View command
 program
-  .command('graph')
-  .description('Open interactive graph visualization')
-  .action(graph);
+  .command('view')
+  .description('Open interactive visualization')
+  .action(view);
 
 program.parse();

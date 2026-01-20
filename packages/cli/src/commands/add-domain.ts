@@ -1,11 +1,15 @@
 /**
  * Add domain command - supports both interactive and non-interactive modes
+ *
+ * This is a thin wrapper around the pure createDomainEvent function.
+ * It handles CLI concerns (interactive prompts, output formatting)
+ * while delegating business logic to the shared package.
  */
 
 import * as p from '@clack/prompts';
 import { isInteractive, hasAllArgs } from '../lib/interactive';
-import { appendEntity, readModel } from '../lib/storage';
-import type { Domain } from '@mentalmodel/shared';
+import { createFileStorage, type Storage } from '../lib/storage';
+import { createDomainEvent, type AddDomainInput } from '@mentalmodel/shared';
 
 interface AddDomainOptions {
   description?: string;
@@ -18,8 +22,14 @@ interface AddDomainOptions {
 
 export async function addDomain(
   name: string | undefined,
-  options: AddDomainOptions
+  options: AddDomainOptions,
+  storageOrCommand?: Storage | unknown
 ): Promise<void> {
+  // Handle Commander passing Command object as third argument
+  const storage: Storage =
+    storageOrCommand && typeof (storageOrCommand as Storage).readModel === 'function'
+      ? (storageOrCommand as Storage)
+      : createFileStorage();
   // Normalize aliases
   const description = options.description || options.desc;
   const references = options.references || options.refs;
@@ -105,42 +115,43 @@ export async function addDomain(
     }
   }
 
-  // Check for duplicates
-  const model = readModel();
-  if (model.domains[domainName!]) {
-    const error = `Domain "${domainName}" already exists`;
-    if (interactive) {
-      p.cancel(error);
-      process.exit(1);
-    } else {
-      console.error(`Error: ${error}`);
-      process.exit(1);
-    }
-  }
-
-  // Build domain object
-  const domain: Domain = {
+  // Build input for pure command function
+  const input: AddDomainInput = {
     name: domainName!,
     description: domainDesc!,
   };
 
   if (domainRefs) {
-    domain.references = domainRefs.split(',').map((r) => r.trim());
+    input.references = domainRefs.split(',').map((r) => r.trim());
   }
 
   if (domainFiles) {
-    domain.files = domainFiles.split(',').map((f) => f.trim());
+    input.files = domainFiles.split(',').map((f) => f.trim());
   }
 
-  // Save to disk
-  appendEntity('domain', domain);
+  // Use pure command function
+  const model = storage.readModel();
+  const result = createDomainEvent(model, input);
+
+  if (!result.ok) {
+    if (interactive) {
+      p.cancel(result.error);
+      process.exit(1);
+    } else {
+      console.error(`Error: ${result.error}`);
+      process.exit(1);
+    }
+  }
+
+  // Persist the event
+  storage.appendEvent(result.event);
 
   // Output
   if (options.json) {
-    console.log(JSON.stringify({ success: true, domain }));
+    console.log(JSON.stringify({ success: true, domain: result.event.payload }));
   } else if (interactive) {
-    p.outro(`✓ Added domain "${domainName}"`);
+    p.outro(`Added domain "${domainName}"`);
   } else {
-    console.log(`✓ Added domain "${domainName}"`);
+    console.log(`Added domain "${domainName}"`);
   }
 }

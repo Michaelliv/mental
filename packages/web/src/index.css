@@ -1,16 +1,82 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Warm light background palette */
+  --color-warm-deep: #FAF7F2;      /* warm paper white */
+  --color-warm-surface: #F5F1EA;   /* slightly darker cream */
+  --color-warm-elevated: #EFEBE4;  /* card/elevated surfaces */
+
+  /* Warm dark text palette */
+  --color-cream: #2C2416;          /* warm charcoal for text */
+  --color-cream-75: rgba(44, 36, 22, 0.75);
+  --color-cream-60: rgba(44, 36, 22, 0.60);
+  --color-cream-45: rgba(44, 36, 22, 0.45);
+  --color-cream-28: rgba(44, 36, 22, 0.28);
+
+  /* Entity colors - muted primary, soothing */
+  --color-domain: #5E8B5E;       /* muted forest green */
+  --color-capability: #5E7B9B;   /* muted slate blue */
+  --color-aspect: #9B6B6B;       /* muted dusty rose */
+  --color-decision: #9B8555;     /* warm ochre */
+
+  /* Borders - warm brown tints */
+  --color-border-subtle: rgba(44, 36, 22, 0.08);
+  --color-border-default: rgba(44, 36, 22, 0.15);
+}
+
+:root {
+  color-scheme: light;
+  --radius: 0.625rem;
+
+  /* Map to warm theme */
+  --background: #FAF7F2;
+  --foreground: #2C2416;
+  --card: #EFEBE4;
+  --card-foreground: #2C2416;
+  --popover: #F5F1EA;
+  --popover-foreground: #2C2416;
+  --primary: #5E7B9B;
+  --primary-foreground: #FAF7F2;
+  --secondary: #EFEBE4;
+  --secondary-foreground: #2C2416;
+  --muted: #F5F1EA;
+  --muted-foreground: rgba(44, 36, 22, 0.60);
+  --accent: #EFEBE4;
+  --accent-foreground: #2C2416;
+  --destructive: #B55A5A;
+  --border: rgba(44, 36, 22, 0.15);
+  --input: rgba(44, 36, 22, 0.15);
+  --ring: #5E7B9B;
+
+  /* Entity colors for charts */
+  --chart-1: #5E8B5E;
+  --chart-2: #5E7B9B;
+  --chart-3: #9B6B6B;
+  --chart-4: #9B8555;
+  --chart-5: #7B8B5E;
+
+  /* Sidebar uses warm surface */
+  --sidebar: #F5F1EA;
+  --sidebar-foreground: #2C2416;
+  --sidebar-primary: #5E7B9B;
+  --sidebar-primary-foreground: #FAF7F2;
+  --sidebar-accent: #EFEBE4;
+  --sidebar-accent-foreground: #2C2416;
+  --sidebar-border: rgba(44, 36, 22, 0.08);
+  --sidebar-ring: #5E7B9B;
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0a0a0a;
-  color: #ffffff;
 }
 
 #root {
@@ -51,6 +117,81 @@ body {
   }
 }
 
+/* Connection pulse - the "ripple" when connections light up */
+@keyframes connection-pulse {
+  0% {
+    transform: scale(0.97);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Glyph subtle rotation on hover */
+@keyframes glyph-focus {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(8deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(5deg) scale(1.05);
+  }
+}
+
+/* Subtle breathing for selected items */
+@keyframes gentle-breathe {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Card press effect */
+@keyframes card-press {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0.98);
+  }
+}
+
+/* "You were here" indicator - gentle fade out */
+@keyframes you-were-here {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(255, 251, 245, 0.3), inset 0 0 20px rgba(255, 251, 245, 0.1);
+  }
+  70% {
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(255, 251, 245, 0.2), inset 0 0 15px rgba(255, 251, 245, 0.05);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: none;
+  }
+}
+
+/* Badge fade animation */
+@keyframes badge-fade {
+  0%, 70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
@@ -61,4 +202,72 @@ body {
 
 .animate-scale-in {
   animation: scale-in 0.2s ease-out;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in,
+  .animate-fade-in,
+  .animate-scale-in {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

@@ -2,7 +2,7 @@
  * Show mental model command
  */
 
-import { readModel } from '../lib/storage';
+import { createFileStorage } from '../lib/storage';
 import pc from 'picocolors';
 
 interface ShowOptions {
@@ -10,7 +10,8 @@ interface ShowOptions {
 }
 
 export function show(options: ShowOptions): void {
-  const model = readModel();
+  const storage = createFileStorage();
+  const model = storage.readModel();
 
   if (options.json) {
     console.log(JSON.stringify(model, null, 2));

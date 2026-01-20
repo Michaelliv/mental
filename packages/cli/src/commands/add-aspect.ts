@@ -1,11 +1,13 @@
 /**
  * Add aspect command
+ *
+ * This is a thin wrapper around the pure createAspectEvent function.
  */
 
 import * as p from '@clack/prompts';
 import { isInteractive, hasAllArgs } from '../lib/interactive';
-import { appendEntity, readModel } from '../lib/storage';
-import type { Aspect } from '@mentalmodel/shared';
+import { createFileStorage, type Storage } from '../lib/storage';
+import { createAspectEvent, type AddAspectInput } from '@mentalmodel/shared';
 
 interface AddAspectOptions {
   description?: string;
@@ -18,8 +20,14 @@ interface AddAspectOptions {
 
 export async function addAspect(
   name: string | undefined,
-  options: AddAspectOptions
+  options: AddAspectOptions,
+  storageOrCommand?: Storage | unknown
 ): Promise<void> {
+  // Handle Commander passing Command object as third argument
+  const storage: Storage =
+    storageOrCommand && typeof (storageOrCommand as Storage).readModel === 'function'
+      ? (storageOrCommand as Storage)
+      : createFileStorage();
   const description = options.description || options.desc;
   const appliesTo = options.appliesTo || options['applies-to'];
   const files = options.files;
@@ -95,39 +103,43 @@ export async function addAspect(
     }
   }
 
-  const model = readModel();
-  if (model.aspects[aspectName!]) {
-    const error = `Aspect "${aspectName}" already exists`;
-    if (interactive) {
-      p.cancel(error);
-    } else {
-      console.error(`Error: ${error}`);
-    }
-    process.exit(1);
-  }
-
-  const aspect: Aspect = {
+  // Build input for pure command function
+  const input: AddAspectInput = {
     name: aspectName!,
     description: aspectDesc!,
   };
 
   if (aspectAppliesTo) {
-    aspect.applies_to = {
+    input.applies_to = {
       capabilities: aspectAppliesTo.split(',').map((c) => c.trim()),
     };
   }
 
   if (aspectFiles) {
-    aspect.files = aspectFiles.split(',').map((f) => f.trim());
+    input.files = aspectFiles.split(',').map((f) => f.trim());
   }
 
-  appendEntity('aspect', aspect);
+  // Use pure command function
+  const model = storage.readModel();
+  const result = createAspectEvent(model, input);
+
+  if (!result.ok) {
+    if (interactive) {
+      p.cancel(result.error);
+    } else {
+      console.error(`Error: ${result.error}`);
+    }
+    process.exit(1);
+  }
+
+  // Persist the event
+  storage.appendEvent(result.event);
 
   if (options.json) {
-    console.log(JSON.stringify({ success: true, aspect }));
+    console.log(JSON.stringify({ success: true, aspect: result.event.payload }));
   } else if (interactive) {
-    p.outro(`✓ Added aspect "${aspectName}"`);
+    p.outro(`Added aspect "${aspectName}"`);
   } else {
-    console.log(`✓ Added aspect "${aspectName}"`);
+    console.log(`Added aspect "${aspectName}"`);
   }
 }

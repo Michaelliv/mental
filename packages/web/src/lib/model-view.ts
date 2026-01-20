@@ -1,12 +1,12 @@
-import type { MentalModel, GraphData, GraphNode, GraphEdge } from '@mentalmodel/shared';
+import type { MentalModel, ModelView, Entity, Connection } from '@mentalmodel/shared';
 
-export function buildGraphData(model: MentalModel): GraphData {
-  const nodes: GraphNode[] = [];
-  const edges: GraphEdge[] = [];
+export function buildModelView(model: MentalModel): ModelView {
+  const entities: Entity[] = [];
+  const connections: Connection[] = [];
 
-  // Add domain nodes
+  // Add domain entities
   for (const [name, domain] of Object.entries(model.domains)) {
-    nodes.push({
+    entities.push({
       id: `domain:${name}`,
       type: 'domain',
       label: name,
@@ -15,10 +15,10 @@ export function buildGraphData(model: MentalModel): GraphData {
       decisions: domain.decisions,
     });
 
-    // Add references edges (domain → domain)
+    // Add references connections (domain → domain)
     if (domain.references) {
       for (const ref of domain.references) {
-        edges.push({
+        connections.push({
           from: `domain:${name}`,
           to: `domain:${ref}`,
           type: 'references',
@@ -27,9 +27,9 @@ export function buildGraphData(model: MentalModel): GraphData {
     }
   }
 
-  // Add capability nodes
+  // Add capability entities
   for (const [name, capability] of Object.entries(model.capabilities)) {
-    nodes.push({
+    entities.push({
       id: `capability:${name}`,
       type: 'capability',
       label: name,
@@ -38,10 +38,10 @@ export function buildGraphData(model: MentalModel): GraphData {
       decisions: capability.decisions,
     });
 
-    // Add operates_on edges (capability → domain)
+    // Add operates_on connections (capability → domain)
     if (capability.operates_on) {
       for (const domainName of capability.operates_on) {
-        edges.push({
+        connections.push({
           from: `capability:${name}`,
           to: `domain:${domainName}`,
           type: 'operates_on',
@@ -49,10 +49,10 @@ export function buildGraphData(model: MentalModel): GraphData {
       }
     }
 
-    // Add composes edges (capability → capability)
+    // Add composes connections (capability → capability)
     if (capability.composes) {
       for (const capName of capability.composes) {
-        edges.push({
+        connections.push({
           from: `capability:${name}`,
           to: `capability:${capName}`,
           type: 'composes',
@@ -61,9 +61,9 @@ export function buildGraphData(model: MentalModel): GraphData {
     }
   }
 
-  // Add aspect nodes
+  // Add aspect entities
   for (const [name, aspect] of Object.entries(model.aspects)) {
-    nodes.push({
+    entities.push({
       id: `aspect:${name}`,
       type: 'aspect',
       label: name,
@@ -72,10 +72,10 @@ export function buildGraphData(model: MentalModel): GraphData {
       decisions: aspect.decisions,
     });
 
-    // Add applies_to edges (aspect → capability/domain)
+    // Add applies_to connections (aspect → capability/domain)
     if (aspect.applies_to?.capabilities) {
       for (const capName of aspect.applies_to.capabilities) {
-        edges.push({
+        connections.push({
           from: `aspect:${name}`,
           to: `capability:${capName}`,
           type: 'applies_to',
@@ -84,7 +84,7 @@ export function buildGraphData(model: MentalModel): GraphData {
     }
     if (aspect.applies_to?.domains) {
       for (const domainName of aspect.applies_to.domains) {
-        edges.push({
+        connections.push({
           from: `aspect:${name}`,
           to: `domain:${domainName}`,
           type: 'applies_to',
@@ -93,5 +93,5 @@ export function buildGraphData(model: MentalModel): GraphData {
     }
   }
 
-  return { nodes, edges };
+  return { entities, connections };
 }

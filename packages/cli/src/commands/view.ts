@@ -1,10 +1,10 @@
 /**
- * Graph command - starts local server with web visualization
+ * View command - starts local server with web visualization
  */
 
 import { join, resolve, extname } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { readModel, isInitialized } from '../lib/storage';
+import { createFileStorage } from '../lib/storage';
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
@@ -16,8 +16,10 @@ const MIME_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
 };
 
-export async function graph(): Promise<void> {
-  if (!isInitialized()) {
+export async function view(): Promise<void> {
+  const storage = createFileStorage();
+
+  if (!storage.isInitialized()) {
     console.error('Error: Mental model not initialized');
     console.error('Run `mental add domain <name>` to create your first entity');
     process.exit(1);
@@ -42,7 +44,7 @@ export async function graph(): Promise<void> {
 
       // API: Get mental model
       if (url.pathname === '/api/model') {
-        const model = readModel();
+        const model = storage.readModel();
         return new Response(JSON.stringify(model), {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -158,7 +160,7 @@ export async function graph(): Promise<void> {
     },
   });
 
-  console.log(`\n✓ Mental Model visualization running at http://localhost:${PORT}\n`);
+  console.log(`\nMental Model visualization running at http://localhost:${PORT}\n`);
   console.log('Press Ctrl+C to stop\n');
 
   // Auto-open browser

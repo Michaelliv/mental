@@ -1,11 +1,13 @@
 /**
  * Add capability command
+ *
+ * This is a thin wrapper around the pure createCapabilityEvent function.
  */
 
 import * as p from '@clack/prompts';
 import { isInteractive, hasAllArgs } from '../lib/interactive';
-import { appendEntity, readModel } from '../lib/storage';
-import type { Capability } from '@mentalmodel/shared';
+import { createFileStorage, type Storage } from '../lib/storage';
+import { createCapabilityEvent, type AddCapabilityInput } from '@mentalmodel/shared';
 
 interface AddCapabilityOptions {
   description?: string;
@@ -19,8 +21,14 @@ interface AddCapabilityOptions {
 
 export async function addCapability(
   name: string | undefined,
-  options: AddCapabilityOptions
+  options: AddCapabilityOptions,
+  storageOrCommand?: Storage | unknown
 ): Promise<void> {
+  // Handle Commander passing Command object as third argument
+  const storage: Storage =
+    storageOrCommand && typeof (storageOrCommand as Storage).readModel === 'function'
+      ? (storageOrCommand as Storage)
+      : createFileStorage();
   const description = options.description || options.desc;
   const operatesOn = options.operatesOn || options['operates-on'];
   const composes = options.composes;
@@ -108,41 +116,45 @@ export async function addCapability(
     }
   }
 
-  const model = readModel();
-  if (model.capabilities[capName!]) {
-    const error = `Capability "${capName}" already exists`;
-    if (interactive) {
-      p.cancel(error);
-    } else {
-      console.error(`Error: ${error}`);
-    }
-    process.exit(1);
-  }
-
-  const capability: Capability = {
+  // Build input for pure command function
+  const input: AddCapabilityInput = {
     name: capName!,
     description: capDesc!,
   };
 
   if (capOperatesOn) {
-    capability.operates_on = capOperatesOn.split(',').map((d) => d.trim());
+    input.operates_on = capOperatesOn.split(',').map((d) => d.trim());
   }
 
   if (capComposes) {
-    capability.composes = capComposes.split(',').map((c) => c.trim());
+    input.composes = capComposes.split(',').map((c) => c.trim());
   }
 
   if (capFiles) {
-    capability.files = capFiles.split(',').map((f) => f.trim());
+    input.files = capFiles.split(',').map((f) => f.trim());
   }
 
-  appendEntity('capability', capability);
+  // Use pure command function
+  const model = storage.readModel();
+  const result = createCapabilityEvent(model, input);
+
+  if (!result.ok) {
+    if (interactive) {
+      p.cancel(result.error);
+    } else {
+      console.error(`Error: ${result.error}`);
+    }
+    process.exit(1);
+  }
+
+  // Persist the event
+  storage.appendEvent(result.event);
 
   if (options.json) {
-    console.log(JSON.stringify({ success: true, capability }));
+    console.log(JSON.stringify({ success: true, capability: result.event.payload }));
   } else if (interactive) {
-    p.outro(`✓ Added capability "${capName}"`);
+    p.outro(`Added capability "${capName}"`);
   } else {
-    console.log(`✓ Added capability "${capName}"`);
+    console.log(`Added capability "${capName}"`);
   }
 }

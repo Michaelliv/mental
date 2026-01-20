@@ -1,10 +1,13 @@
 /**
  * Add decision command
+ *
+ * This is a thin wrapper around the pure createDecisionEvent function.
  */
 
 import * as p from '@clack/prompts';
 import { isInteractive, hasAllArgs } from '../lib/interactive';
-import { appendEntity, readModel } from '../lib/storage';
+import { createFileStorage, type Storage } from '../lib/storage';
+import { createDecisionEvent, type AddDecisionInput } from '@mentalmodel/shared';
 import type { Decision } from '@mentalmodel/shared';
 
 interface AddDecisionOptions {
@@ -16,8 +19,14 @@ interface AddDecisionOptions {
 
 export async function addDecision(
   what: string | undefined,
-  options: AddDecisionOptions
+  options: AddDecisionOptions,
+  storageOrCommand?: Storage | unknown
 ): Promise<void> {
+  // Handle Commander passing Command object as third argument
+  const storage: Storage =
+    storageOrCommand && typeof (storageOrCommand as Storage).readModel === 'function'
+      ? (storageOrCommand as Storage)
+      : createFileStorage();
   const why = options.why;
   const relatesTo = options.relates || options['relates-to'];
 
@@ -81,7 +90,7 @@ export async function addDecision(
   // Parse relates_to
   const relates_to: Decision['relates_to'] = {};
   if (decRelatesTo) {
-    const parts = decRelatesTo.split(',').map((p) => p.trim());
+    const parts = decRelatesTo.split(',').map((part) => part.trim());
     for (const part of parts) {
       const [type, name] = part.split(':').map((s) => s.trim());
       if (type === 'domain') {
@@ -97,21 +106,37 @@ export async function addDecision(
     }
   }
 
-  const decision: Decision = {
-    id: `dec-${Date.now()}`,
+  // Build input for pure command function
+  const input: AddDecisionInput = {
     what: decWhat!,
     why: decWhy!,
-    when: new Date().toISOString(),
     relates_to,
   };
 
-  appendEntity('decision', decision);
+  // Use pure command function
+  const model = storage.readModel();
+  const result = createDecisionEvent(model, input);
+
+  if (!result.ok) {
+    if (interactive) {
+      p.cancel(result.error);
+    } else {
+      console.error(`Error: ${result.error}`);
+    }
+    process.exit(1);
+  }
+
+  // Persist the event
+  storage.appendEvent(result.event);
+
+  // Get the decision ID from the event payload
+  const decision = result.event.payload as Decision;
 
   if (options.json) {
     console.log(JSON.stringify({ success: true, decision }));
   } else if (interactive) {
-    p.outro(`✓ Added decision (ID: ${decision.id})`);
+    p.outro(`Added decision (ID: ${decision.id})`);
   } else {
-    console.log(`✓ Added decision (ID: ${decision.id})`);
+    console.log(`Added decision (ID: ${decision.id})`);
   }
 }

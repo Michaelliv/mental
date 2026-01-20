@@ -125,6 +125,61 @@ export async function view(): Promise<void> {
         }
       }
 
+      // API: Get doc content (for decision docs)
+      if (url.pathname === '/api/doc') {
+        const docPath = url.searchParams.get('path');
+        if (!docPath) {
+          return new Response(JSON.stringify({ error: 'Missing path parameter' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Check if it's a URL (external doc)
+        if (docPath.startsWith('http://') || docPath.startsWith('https://')) {
+          return new Response(
+            JSON.stringify({ url: docPath, isExternal: true }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Local file: resolve path and ensure it's within cwd
+        const cwd = process.cwd();
+        const absolutePath = resolve(cwd, docPath);
+        if (!absolutePath.startsWith(cwd)) {
+          return new Response(JSON.stringify({ error: 'Invalid path' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        if (!existsSync(absolutePath)) {
+          return new Response(JSON.stringify({ error: 'File not found' }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        try {
+          const content = readFileSync(absolutePath, 'utf-8');
+          const ext = extname(absolutePath).toLowerCase();
+          const isMarkdown = ext === '.md' || ext === '.mdx';
+
+          return new Response(
+            JSON.stringify({ content, isMarkdown, isExternal: false }),
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+        } catch (error) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to read file' }),
+            {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      }
+
       // Serve static files from web/dist
       let pathname = url.pathname;
       if (pathname === '/') {

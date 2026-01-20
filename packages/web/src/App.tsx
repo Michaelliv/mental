@@ -1,30 +1,18 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import type { MentalModel } from '@mentalmodel/shared';
 import { buildModelView } from './lib/model-view';
 import { StructureView } from './components/StructureView';
-import { TimelineView } from './components/TimelineView';
-import { DecisionsView } from './components/DecisionsView';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fetchers } from './lib/api';
-
-type ViewMode = 'structure' | 'timeline' | 'decisions';
 
 export default function App() {
   const { data: model, error, isLoading } = useSWR<MentalModel>('/api/model', fetchers.model);
-  const [viewMode, setViewMode] = useState<ViewMode>('structure');
   const [searchQuery, setSearchQuery] = useState('');
 
   const modelView = useMemo(() => {
     if (!model) return null;
     return buildModelView(model);
   }, [model]);
-
-  const handleSelectEntity = useCallback((entityId: string) => {
-    // Switch to structure view to show the entity
-    setViewMode('structure');
-    // The structure view will handle the selection
-  }, []);
 
   // Count entities for the header
   const entityCounts = useMemo(() => {
@@ -87,9 +75,9 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-warm-deep">
+    <div className="h-screen flex flex-col bg-dotted">
       {/* Header */}
-      <header className="flex-shrink-0 px-6 py-3 border-b border-border-subtle">
+      <header className="flex-shrink-0 px-6 py-3 border-b border-border-subtle bg-warm-deep">
         <div className="flex items-center justify-between">
           {/* Left: Title and counts */}
           <div className="flex items-center gap-6">
@@ -150,29 +138,13 @@ export default function App() {
               )}
             </div>
 
-            {/* View tabs */}
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <TabsList>
-                <TabsTrigger value="structure">Structure</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                <TabsTrigger value="decisions">Decisions</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
         </div>
       </header>
 
       {/* Main content */}
       <main className="flex-1 min-h-0">
-        {viewMode === 'structure' && (
-          <StructureView data={modelView} model={model} searchQuery={searchQuery} />
-        )}
-        {viewMode === 'timeline' && (
-          <TimelineView model={model} onSelectEntity={handleSelectEntity} />
-        )}
-        {viewMode === 'decisions' && (
-          <DecisionsView model={model} data={modelView} onSelectEntity={handleSelectEntity} />
-        )}
+        <StructureView data={modelView} model={model} searchQuery={searchQuery} />
       </main>
     </div>
   );

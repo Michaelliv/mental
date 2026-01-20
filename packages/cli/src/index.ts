@@ -12,6 +12,7 @@ import { addAspect } from './commands/add-aspect';
 import { addDecision } from './commands/add-decision';
 import { deleteEntity } from './commands/delete';
 import { updateDomain, updateCapability, updateAspect } from './commands/update';
+import { supersedeDecision } from './commands/supersede-decision';
 import { show } from './commands/show';
 import { view } from './commands/view';
 
@@ -61,7 +62,9 @@ add
   .command('decision [what]')
   .description('Add a decision')
   .option('-w, --why <rationale>', 'Why this decision was made')
+  .option('-c, --context <context>', 'Context when decision was made')
   .option('-r, --relates-to <entities>', 'Related entities (format: domain:Name,capability:Name)')
+  .option('-d, --docs <docs>', 'Related docs (comma-separated paths or URLs)')
   .option('--json', 'Output JSON')
   .action(addDecision);
 
@@ -132,6 +135,19 @@ update
   .option('--cascade', 'Update references in other entities when renaming')
   .option('--json', 'Output JSON')
   .action(updateAspect);
+
+// Supersede command group
+const supersede = program.command('supersede').description('Supersede entities in the mental model');
+
+supersede
+  .command('decision <id>')
+  .description('Supersede a decision with a new one')
+  .option('--what <decision>', 'The new decision')
+  .option('-w, --why <rationale>', 'Why superseding')
+  .option('-c, --context <context>', 'Context for new decision')
+  .option('-r, --relates-to <entities>', 'New relations (format: domain:Name,capability:Name)')
+  .option('--json', 'Output JSON')
+  .action(supersedeDecision);
 
 // Show command
 program

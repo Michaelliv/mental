@@ -26,3 +26,6 @@ export {
 
 // Delete command
 export { createDeleteEvent, type DeleteEntityInput } from './delete';
+
+// Supersede command
+export { createSupersedeDecisionEvents, type SupersedeDecisionInput } from './supersede-decision';

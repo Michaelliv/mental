@@ -12,8 +12,10 @@ import type { Decision } from '@mentalmodel/shared';
 
 interface AddDecisionOptions {
   why?: string;
+  context?: string;
   relates?: string;
-  'relates-to'?: string;
+  relatesTo?: string;
+  docs?: string;
   json?: boolean;
 }
 
@@ -28,14 +30,18 @@ export async function addDecision(
       ? (storageOrCommand as Storage)
       : createFileStorage();
   const why = options.why;
-  const relatesTo = options.relates || options['relates-to'];
+  const context = options.context;
+  const relatesTo = options.relates || options.relatesTo;
+  const docs = options.docs;
 
   const hasAll = hasAllArgs({ what, why }, ['what', 'why']);
   const interactive = isInteractive(options) && !hasAll;
 
   let decWhat = what;
   let decWhy = why;
+  let decContext = context;
   let decRelatesTo = relatesTo;
+  let decDocs = docs;
 
   if (interactive) {
     p.intro('Add a decision');
@@ -70,6 +76,16 @@ export async function addDecision(
       decWhy = whyInput as string;
     }
 
+    if (!decContext) {
+      const contextInput = await p.text({
+        message: 'Context (optional - what was true when this decision was made?):',
+        placeholder: 'Small team, familiar with SQL, needed ACID compliance',
+      });
+      if (!p.isCancel(contextInput) && contextInput) {
+        decContext = contextInput as string;
+      }
+    }
+
     if (!decRelatesTo) {
       const relatesInput = await p.text({
         message: 'Relates to (format: domain:Name,capability:Name):',
@@ -77,6 +93,16 @@ export async function addDecision(
       });
       if (!p.isCancel(relatesInput) && relatesInput) {
         decRelatesTo = relatesInput as string;
+      }
+    }
+
+    if (!decDocs) {
+      const docsInput = await p.text({
+        message: 'Related docs (comma-separated paths or URLs):',
+        placeholder: 'docs/adr/database.md,https://notion.so/analysis',
+      });
+      if (!p.isCancel(docsInput) && docsInput) {
+        decDocs = docsInput as string;
       }
     }
   } else {
@@ -106,11 +132,18 @@ export async function addDecision(
     }
   }
 
+  // Parse docs into array
+  const docsArray = decDocs
+    ? decDocs.split(',').map((d) => d.trim()).filter((d) => d.length > 0)
+    : undefined;
+
   // Build input for pure command function
   const input: AddDecisionInput = {
     what: decWhat!,
     why: decWhy!,
+    ...(decContext && { context: decContext }),
     relates_to,
+    ...(docsArray && docsArray.length > 0 && { docs: docsArray }),
   };
 
   // Use pure command function

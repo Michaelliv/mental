@@ -54,10 +54,10 @@ export function EntityCard({
   // Build class names based on state
   const cardClasses = [
     'p-3 rounded-lg border-2 transition-all duration-150',
-    highlightLevel === 3 && 'border-current bg-current/15 shadow-lg shadow-current/20',
-    highlightLevel === 2 && 'border-current/50 bg-current/8 shadow-md shadow-current/10',
-    highlightLevel === 1 && 'border-border-default bg-warm-elevated/50',
-    highlightLevel === 0 && 'border-border-subtle bg-warm-elevated/30',
+    highlightLevel === 3 && 'border-current bg-warm-surface shadow-lg shadow-current/20',
+    highlightLevel === 2 && 'border-current/50 bg-warm-elevated shadow-md shadow-current/10',
+    highlightLevel === 1 && 'border-border-default bg-warm-elevated',
+    highlightLevel === 0 && 'border-border-subtle bg-warm-elevated',
     isPressed && 'shadow-inner',
   ].filter(Boolean).join(' ');
 

@@ -1,8 +1,11 @@
-import React, { useMemo, useCallback } from 'react';
-import type { ModelView, Entity, MentalModel } from '@mentalmodel/shared';
+import React, { useMemo, useCallback, useState } from 'react';
+import type { ModelView, Entity, MentalModel, Decision } from '@mentalmodel/shared';
 import { EntityColumn } from './EntityColumn';
 import { DetailPanel } from './DetailPanel';
 import { TimelineBar } from './TimelineBar';
+import { CodeViewer } from './CodeViewer';
+import { DecisionViewer } from './DecisionViewer';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useEntitySelection, useConnectionHighlighting, useEntityFilter } from '../hooks';
 
 interface StructureViewProps {
@@ -68,7 +71,30 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
 
   const handleCloseDetail = useCallback(() => {
     clearSelection();
+    setSelectedFile(null);
   }, [clearSelection]);
+
+  // File viewer state
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+  const handleFileSelect = useCallback((file: string) => {
+    setSelectedFile(file);
+  }, []);
+
+  const handleCloseFile = useCallback(() => {
+    setSelectedFile(null);
+  }, []);
+
+  // Decision viewer state
+  const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null);
+
+  const handleDecisionSelect = useCallback((decision: Decision) => {
+    setSelectedDecision(decision);
+  }, []);
+
+  const handleCloseDecision = useCallback(() => {
+    setSelectedDecision(null);
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -127,19 +153,42 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
           </div>
         </div>
 
-        {/* Detail panel */}
-        {selectedEntity && (
-          <div className="w-80 flex-shrink-0 border-l border-border-subtle">
+      </div>
+
+      {/* Detail panel as sheet overlay */}
+      <Sheet open={!!selectedEntity} onOpenChange={(open) => !open && handleCloseDetail()}>
+        <SheetContent className="w-96 p-0 bg-warm-surface [&>button]:hidden">
+          {selectedEntity && (
             <DetailPanel
               entity={selectedEntity}
               connections={data.connections}
               model={model}
               onClose={handleCloseDetail}
               onNavigate={handleNavigate}
+              onFileSelect={handleFileSelect}
+              onDecisionSelect={handleDecisionSelect}
             />
-          </div>
-        )}
-      </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Code viewer as left sheet */}
+      <Sheet open={!!selectedFile} onOpenChange={(open) => !open && handleCloseFile()}>
+        <SheetContent side="left" className="w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden" overlayClassName="backdrop-blur-none bg-transparent">
+          {selectedFile && (
+            <CodeViewer file={selectedFile} onClose={handleCloseFile} />
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Decision viewer as left sheet */}
+      <Sheet open={!!selectedDecision} onOpenChange={(open) => !open && handleCloseDecision()}>
+        <SheetContent side="left" className="w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden" overlayClassName="backdrop-blur-none bg-transparent">
+          {selectedDecision && (
+            <DecisionViewer decision={selectedDecision} onClose={handleCloseDecision} />
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Timeline bar at bottom */}
       <TimelineBar

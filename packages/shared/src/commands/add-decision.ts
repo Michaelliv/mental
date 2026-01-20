@@ -9,11 +9,13 @@ import { type CommandResult, success, failure } from './types';
 export interface AddDecisionInput {
   what: string;
   why: string;
+  context?: string;
   relates_to?: {
     domains?: string[];
     capabilities?: string[];
     aspects?: string[];
   };
+  docs?: string[];
 }
 
 /**
@@ -54,8 +56,11 @@ export function createDecisionEvent(
     id: `dec-${Date.now()}`,
     what: input.what,
     why: input.why,
+    ...(input.context && { context: input.context }),
     when: new Date().toISOString(),
+    status: 'active',
     relates_to,
+    ...(input.docs && input.docs.length > 0 && { docs: input.docs }),
   };
 
   // Create and return event

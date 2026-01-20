@@ -2,16 +2,22 @@
  * Core mental model types - MVP
  */
 
+export type DecisionStatus = 'active' | 'superseded';
+
 export interface Decision {
   id: string;
   what: string; // The actual decision made
   why: string; // Brief rationale
+  context?: string; // Circumstances when decided
   when: string; // ISO timestamp
+  status: DecisionStatus; // 'active' | 'superseded'
+  superseded_by?: string; // ID of replacement decision
   relates_to: {
     domains?: string[];
     capabilities?: string[];
     aspects?: string[];
   };
+  docs?: string[]; // Local paths (relative to project) or URLs
 }
 
 export interface Domain {

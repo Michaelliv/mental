@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Entity, Connection, MentalModel, Decision } from '@mentalmodel/shared';
-import { CodeViewer } from './CodeViewer';
+import { DecisionCard } from './DecisionCard';
 
 interface DetailPanelProps {
   entity: Entity;
@@ -8,6 +8,8 @@ interface DetailPanelProps {
   model: MentalModel;
   onClose: () => void;
   onNavigate: (entityId: string) => void;
+  onFileSelect?: (file: string) => void;
+  onDecisionSelect?: (decision: Decision) => void;
 }
 
 const typeConfig = {
@@ -35,9 +37,9 @@ interface RelationshipGroup {
   items: Array<{ id: string; label: string; type: 'domain' | 'capability' | 'aspect' }>;
 }
 
-export function DetailPanel({ entity, connections, model, onClose, onNavigate }: DetailPanelProps) {
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+export function DetailPanel({ entity, connections, model, onClose, onNavigate, onFileSelect, onDecisionSelect }: DetailPanelProps) {
   const config = typeConfig[entity.type];
+  const [showSuperseded, setShowSuperseded] = useState(false);
 
   // Build relationship groups
   const relationships: RelationshipGroup[] = [];
@@ -113,14 +115,57 @@ export function DetailPanel({ entity, connections, model, onClose, onNavigate }:
   if (governedBy.length > 0) relationships.push({ label: 'Governed by', type: 'inbound', edgeType: 'applies_to', items: governedBy });
   if (composedBy.length > 0) relationships.push({ label: 'Composed by', type: 'inbound', edgeType: 'composes', items: composedBy });
 
-  // Get decisions
-  const decisions: Decision[] = entity.decisions
-    ?.map((id) => model.decisions[id])
-    .filter(Boolean) || [];
+  // Get decisions related to this entity (via relates_to reverse lookup)
+  const { activeDecisions, supersededDecisions, allDecisions } = useMemo(() => {
+    const entityName = entity.label;
+    const related: Decision[] = [];
+
+    for (const decision of Object.values(model.decisions)) {
+      const matches =
+        (entity.type === 'domain' && decision.relates_to?.domains?.includes(entityName)) ||
+        (entity.type === 'capability' && decision.relates_to?.capabilities?.includes(entityName)) ||
+        (entity.type === 'aspect' && decision.relates_to?.aspects?.includes(entityName));
+      if (matches) related.push(decision);
+    }
+
+    // Also check entity.decisions for backwards compatibility
+    const decisionIds = entity.decisions || [];
+    for (const id of decisionIds) {
+      const dec = model.decisions[id];
+      if (dec && !related.find((d) => d.id === dec.id)) {
+        related.push(dec);
+      }
+    }
+
+    // Sort: active first, then by date (newest first)
+    related.sort((a, b) => {
+      if (a.status !== b.status) {
+        return a.status === 'active' ? -1 : 1;
+      }
+      if (!a.when && !b.when) return 0;
+      if (!a.when) return 1;
+      if (!b.when) return -1;
+      return new Date(b.when).getTime() - new Date(a.when).getTime();
+    });
+
+    return {
+      activeDecisions: related.filter((d) => d.status === 'active'),
+      supersededDecisions: related.filter((d) => d.status === 'superseded'),
+      allDecisions: related,
+    };
+  }, [entity, model.decisions]);
+
+  // For backwards compatibility: decisions from entity.decisions that exist and don't have status
+  const legacyDecisions: Decision[] = (entity.decisions || [])
+    .map((id) => model.decisions[id])
+    .filter((d): d is Decision => Boolean(d) && !d.status);
+
+  // Combine with related decisions for display
+  const decisionsToShow = showSuperseded ? allDecisions : activeDecisions;
+  const hasSuperseded = supersededDecisions.length > 0;
 
   return (
-    <>
-      <div className="h-full flex flex-col bg-warm-surface">
+    <div className="h-full flex flex-col bg-warm-surface">
         {/* Header */}
         <div className="flex-shrink-0 p-4 border-b border-border-subtle">
           <div className="flex items-start justify-between mb-2">
@@ -171,13 +216,35 @@ export function DetailPanel({ entity, connections, model, onClose, onNavigate }:
           )}
 
           {/* Decisions */}
-          {decisions.length > 0 && (
+          {(decisionsToShow.length > 0 || legacyDecisions.length > 0) && (
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 text-decision">
-                ⚡ Decisions
-              </h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-decision">
+                  ⚡ Decisions
+                </h3>
+                {hasSuperseded && (
+                  <button
+                    onClick={() => setShowSuperseded(!showSuperseded)}
+                    className="text-[10px] text-cream-45 hover:text-cream-60 transition-colors"
+                  >
+                    {showSuperseded ? 'Hide' : 'Show'} superseded ({supersededDecisions.length})
+                  </button>
+                )}
+              </div>
               <div className="space-y-2">
-                {decisions.map((dec) => (
+                {decisionsToShow.map((dec) => (
+                  <DecisionCard
+                    key={dec.id}
+                    decision={dec}
+                    onClick={onDecisionSelect ? () => onDecisionSelect(dec) : undefined}
+                    onReplacementClick={(id) => {
+                      // Show superseded decisions if the replacement is clicked
+                      if (!showSuperseded) setShowSuperseded(true);
+                    }}
+                  />
+                ))}
+                {/* Legacy decisions without status */}
+                {legacyDecisions.map((dec) => (
                   <div
                     key={dec.id}
                     className="p-3 rounded-lg border-l-2 border-decision bg-decision/5"
@@ -200,7 +267,7 @@ export function DetailPanel({ entity, connections, model, onClose, onNavigate }:
                 {entity.files.map((file) => (
                   <button
                     key={file}
-                    onClick={() => setSelectedFile(file)}
+                    onClick={() => onFileSelect?.(file)}
                     className="w-full text-left px-3 py-2 rounded-lg transition-all group flex items-center justify-between bg-warm-elevated border border-border-subtle hover:border-border-default"
                   >
                     <span className="text-xs font-mono truncate text-cream-45 group-hover:text-cream-75">
@@ -222,7 +289,7 @@ export function DetailPanel({ entity, connections, model, onClose, onNavigate }:
           )}
 
           {/* Empty state */}
-          {relationships.length === 0 && decisions.length === 0 && (!entity.files || entity.files.length === 0) && (
+          {relationships.length === 0 && allDecisions.length === 0 && legacyDecisions.length === 0 && (!entity.files || entity.files.length === 0) && (
             <div className="text-center py-8 text-sm text-cream-28">
               <div className="mb-2">This {config.label.toLowerCase()} stands alone for now</div>
               <div className="text-xs">Connections will appear as your model grows</div>
@@ -230,11 +297,5 @@ export function DetailPanel({ entity, connections, model, onClose, onNavigate }:
           )}
         </div>
       </div>
-
-      {/* Code viewer modal */}
-      {selectedFile && (
-        <CodeViewer file={selectedFile} onClose={() => setSelectedFile(null)} />
-      )}
-    </>
   );
 }

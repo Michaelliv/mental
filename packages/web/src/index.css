@@ -79,6 +79,30 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Code viewer line numbers */
+.code-with-line-numbers code {
+  counter-reset: line;
+}
+
+.code-with-line-numbers code > .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: rgba(44, 36, 22, 0.3);
+  border-right: 1px solid rgba(44, 36, 22, 0.1);
+  padding-right: 0.75rem;
+  margin-right: 0.75rem;
+}
+
+.bg-dotted {
+  background-color: #FAF7F2;
+  background-image: radial-gradient(circle, rgba(44, 36, 22, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
 #root {
   width: 100vw;
   height: 100vh;

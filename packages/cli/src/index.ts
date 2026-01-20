@@ -15,6 +15,7 @@ import { updateDomain, updateCapability, updateAspect } from './commands/update'
 import { supersedeDecision } from './commands/supersede-decision';
 import { show } from './commands/show';
 import { view } from './commands/view';
+import { onboard } from './commands/onboard';
 
 const program = new Command();
 
@@ -161,5 +162,13 @@ program
   .command('view')
   .description('Open interactive visualization')
   .action(view);
+
+// Onboard command
+program
+  .command('onboard')
+  .description('Add mental section to CLAUDE.md or AGENTS.md')
+  .option('-f, --force', 'Update existing section')
+  .option('-g, --global', 'Add to ~/.claude/CLAUDE.md instead of project root')
+  .action(onboard);
 
 program.parse();

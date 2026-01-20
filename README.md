@@ -65,14 +65,22 @@ mental add capability Checkout --desc "Completes a purchase" --operates-on Order
 # Add an aspect
 mental add aspect Auth --desc "Authentication and authorization" --applies-to Checkout
 
-# Record a decision
-mental add decision "Use Stripe for payments" --why "Proven reliability, great DX"
+# Record a decision with documentation
+mental add decision "Use Stripe for payments" \
+  --why "Proven reliability, great DX" \
+  --relates-to "domain:Order,capability:Checkout" \
+  --docs "docs/adr/payments.md,https://stripe.com/docs"
+
+# Supersede a decision when things change
+mental supersede decision dec-123 \
+  --what "Switch to Adyen for payments" \
+  --why "Better international coverage"
 
 # See what you know
 mental show
 
 # Visualize your understanding
-mental graph
+mental view
 ```
 
 ## The Visualization
@@ -80,6 +88,8 @@ mental graph
 Three columns. Your vocabulary. Click to explore connections.
 
 Hover to see what's related. Click to lock the highlight and see details. Connections light up across columns so you can trace relationships.
+
+Click on a decision to open the decision viewer — see the rationale, context, and linked documentation rendered inline. Local markdown files display beautifully; external URLs open in new tabs.
 
 This is how you stay oriented. How you remember. How you stay the expert on your own system.
 

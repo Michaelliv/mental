@@ -1,6 +1,6 @@
 # Mental Model
 
-> Your understanding of your codebase — externalized
+> Your understanding of your codebase -externalized
 
 ## The Problem
 
@@ -8,20 +8,20 @@ AI writes your code now. Features ship fast. But something is slipping away.
 
 When **you** write code, understanding comes free. You build the mental model as you build the software. You know what's there because you put it there.
 
-When **AI** writes code, the code appears — but the understanding doesn't transfer. You read it, you approve it, you ship it. But you didn't *build* it. And slowly, you become a stranger in your own codebase.
+When **AI** writes code, the code appears -but the understanding doesn't transfer. You read it, you approve it, you ship it. But you didn't *build* it. And slowly, you become a stranger in your own codebase.
 
 You open a file and don't recognize it. You can't explain your system without asking the AI. You approve PRs you don't fully understand. You feel productive, but secretly lost.
 
-**The mental model you would have built — if you'd written it yourself — is missing.**
+**The mental model you would have built -if you'd written it yourself -is missing.**
 
 ## The Solution
 
 Externalize the mental model. Make it visible. Keep it updated as code evolves.
 
-- **Domains** — the nouns of your system (User, Order, Payment)
-- **Capabilities** — the verbs (Checkout, ProcessRefund, SendNotification)
-- **Aspects** — the cross-cutting concerns (Auth, Validation, Retry, Audit)
-- **Decisions** — the why behind the what
+- **Domains** -the nouns of your system (User, Order, Payment)
+- **Capabilities** -the verbs (Checkout, ProcessRefund, SendNotification)
+- **Aspects** -the cross-cutting concerns (Auth, Validation, Retry, Audit)
+- **Decisions** -the why behind the what
 
 This isn't documentation for others. It's **your understanding**, stored outside your head so you don't have to carry it all.
 
@@ -89,7 +89,7 @@ Three columns. Your vocabulary. Click to explore connections.
 
 Hover to see what's related. Click to lock the highlight and see details. Connections light up across columns so you can trace relationships.
 
-Click on a decision to open the decision viewer — see the rationale, context, and linked documentation rendered inline. Local markdown files display beautifully; external URLs open in new tabs.
+Click on a decision to open the decision viewer -see the rationale, context, and linked documentation rendered inline. Local markdown files display beautifully; external URLs open in new tabs.
 
 This is how you stay oriented. How you remember. How you stay the expert on your own system.
 
@@ -97,7 +97,7 @@ This is how you stay oriented. How you remember. How you stay the expert on your
 
 1. AI writes code, makes decisions, adds features
 2. The mental model captures what was built and why
-3. You explore visually — reinforcing your understanding
+3. You explore visually -reinforcing your understanding
 4. You stay competent to supervise, direct, and architect
 
 The mental model is the understanding you would have built if you'd written it yourself.
@@ -108,7 +108,7 @@ This tool exists because of a belief:
 
 **Developers shouldn't become strangers in their own codebases.**
 
-AI is fast. AI is capable. But speed without understanding is dangerous. You need to stay in the loop — not as a rubber stamp, but as the architect who truly knows their system.
+AI is fast. AI is capable. But speed without understanding is dangerous. You need to stay in the loop -not as a rubber stamp, but as the architect who truly knows their system.
 
 The mental model is permission to forget the details, because you can always look them up. It's cognitive relief. It's how you scale your understanding alongside the code.
 

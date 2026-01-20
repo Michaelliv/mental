@@ -4,13 +4,13 @@
 
 ## The Problem
 
-AI writes your code now. Features ship fast. But something is slipping away.
+Agents write your code now. Features ship fast. But something is slipping away.
 
 When **you** write code, understanding comes free. You build the mental model as you build the software. You know what's there because you put it there.
 
-When **AI** writes code, the code appears, but the understanding doesn't transfer. You read it, you approve it, you ship it. But you didn't *build* it. And slowly, you become a stranger in your own codebase.
+When **agents** write code, the code appears, but the understanding doesn't transfer. You read it, you approve it, you ship it. But you didn't *build* it. And slowly, you become a stranger in your own codebase.
 
-You open a file and don't recognize it. You can't explain your system without asking the AI. You approve PRs you don't fully understand. You feel productive, but secretly lost.
+You open a file and don't recognize it. You can't explain your system without asking the agent. You approve PRs you don't fully understand. You feel productive, but secretly lost.
 
 **The mental model you would have built, if you'd written it yourself, is missing.**
 
@@ -40,18 +40,18 @@ This isn't documentation for others. It's **your understanding**, stored outside
 ## Why This Matters
 
 **Without a mental model tool:**
-- You supervise AI but understanding atrophies
-- You become dependent on AI to explain your own code
+- You supervise agents but understanding atrophies
+- You become dependent on agents to explain your own code
 - You can't onboard others or explain the system
 - You feel productive but secretly lost
 - Crisis: "Am I even an engineer anymore?"
 
 **With a mental model tool:**
-- You supervise AI while maintaining understanding
-- You can answer questions without asking AI
+- You supervise agents while maintaining understanding
+- You can answer questions without asking the agent
 - You can explain the system to anyone in minutes
 - You feel both productive AND competent
-- You're the architect. AI is your builder.
+- You're the architect. Agents are your builders.
 
 ## Usage
 
@@ -95,7 +95,7 @@ This is how you stay oriented. How you remember. How you stay the expert on your
 
 ## How It Works
 
-1. AI writes code, makes decisions, adds features
+1. Agents write code, make decisions, add features
 2. The mental model captures what was built and why
 3. You explore visually, reinforcing your understanding
 4. You stay competent to supervise, direct, and architect
@@ -108,7 +108,7 @@ This tool exists because of a belief:
 
 **Developers shouldn't become strangers in their own codebases.**
 
-AI is fast. AI is capable. But speed without understanding is dangerous. You need to stay in the loop, not as a rubber stamp, but as the architect who truly knows their system.
+Agents are fast. Agents are capable. But speed without understanding is dangerous. You need to stay in the loop, not as a rubber stamp, but as the architect who truly knows their system.
 
 The mental model is permission to forget the details, because you can always look them up. It's cognitive relief. It's how you scale your understanding alongside the code.
 

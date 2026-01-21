@@ -6,6 +6,12 @@
  */
 
 import { Command } from 'commander';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read version from package.json
+const packageJson = JSON.parse(readFileSync(join(import.meta.dir, '../package.json'), 'utf-8'));
+const VERSION = packageJson.version;
 import { addDomain } from './commands/add-domain';
 import { addCapability } from './commands/add-capability';
 import { addAspect } from './commands/add-aspect';
@@ -23,7 +29,7 @@ const program = new Command();
 program
   .name('mental')
   .description('The mental model layer for agent-written code')
-  .version('0.1.0');
+  .version(VERSION);
 
 // Add command group
 const add = program.command('add').description('Add entities to the mental model');

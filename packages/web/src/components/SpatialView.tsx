@@ -152,10 +152,11 @@ export function SpatialView({ data, model, searchQuery }: SpatialViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Aspect bar at top */}
-      {aspects.length > 0 && (
-        <div className="flex-shrink-0 border-b border-border-subtle bg-warm-deep/50">
-          <div className="px-4 pt-2 pb-1">
+      {/* Main scrollable area */}
+      <div className="flex-1 min-h-0 overflow-auto p-4">
+        {/* Aspect bar at top - scrolls with content */}
+        {aspects.length > 0 && (
+          <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-aspect text-sm font-mono">○</span>
               <span className="text-xs font-medium text-cream-45 uppercase tracking-wide">
@@ -163,32 +164,27 @@ export function SpatialView({ data, model, searchQuery }: SpatialViewProps) {
               </span>
               <span className="text-xs text-cream-28">({aspects.length})</span>
             </div>
-            {/* Wrapper with negative margin to compensate for inner padding that prevents clipping */}
-            <div className="-mx-2 -mb-1">
-              <div className="flex gap-2 overflow-x-auto px-2 py-2 scrollbar-thin">
-                {aspects.map((aspect) => (
-                  <div key={aspect.id} className="flex-shrink-0 w-56">
-                    <EntityCard
-                      entity={aspect}
-                      connections={data.connections}
-                      isHovered={hoveredEntityId === aspect.id}
-                      isDirectConnection={directConnections.has(aspect.id)}
-                      isTransitiveConnection={transitiveConnections.has(aspect.id)}
-                      isSelected={selectedEntity?.id === aspect.id}
-                      isLastVisited={lastVisitedEntityId === aspect.id}
-                      onHover={handleHover}
-                      onClick={handleSelect}
-                    />
-                  </div>
-                ))}
-              </div>
+            <div className="flex gap-2 flex-wrap">
+              {aspects.map((aspect) => (
+                <div key={aspect.id} className="w-56">
+                  <EntityCard
+                    entity={aspect}
+                    connections={data.connections}
+                    isHovered={hoveredEntityId === aspect.id}
+                    isDirectConnection={directConnections.has(aspect.id)}
+                    isTransitiveConnection={transitiveConnections.has(aspect.id)}
+                    isSelected={selectedEntity?.id === aspect.id}
+                    isLastVisited={lastVisitedEntityId === aspect.id}
+                    onHover={handleHover}
+                    onClick={handleSelect}
+                  />
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main spatial grid */}
-      <div className="flex-1 min-h-0 overflow-auto p-4">
+        {/* Domain regions grid */}
         {domainRegions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-min">
             {domainRegions.map((region) => (

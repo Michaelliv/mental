@@ -30,3 +30,16 @@ Use `mental` to maintain the mental model as you work on the codebase.
 - Attach documentation with --docs (local paths or URLs)
 </guidelines>
 </mental>
+
+<landing-page>
+Deploy the landing page to mentalmodel.sh (Cloudflare Pages):
+
+```bash
+cd packages/landing
+bun run build
+bun x wrangler pages deploy dist --project-name=mentalmodel
+```
+
+- Project: `mentalmodel` on Cloudflare Pages
+- URL: https://mentalmodel.sh (custom domain) / https://mentalmodel.pages.dev
+</landing-page>

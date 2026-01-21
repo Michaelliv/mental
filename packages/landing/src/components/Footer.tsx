@@ -28,6 +28,14 @@ export function Footer() {
           >
             @micLivs
           </a>
+          <a
+            href="https://michaellivs.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-cream-60 hover:text-cream transition-colors"
+          >
+            Blog
+          </a>
         </div>
 
         {/* Glyphs */}

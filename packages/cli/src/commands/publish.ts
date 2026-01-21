@@ -235,24 +235,18 @@ export async function publish(options: PublishOptions): Promise<void> {
   // Find web dist path
   const bundledWebPath = join(import.meta.dir, 'web');
   const devWebPath = resolve(import.meta.dir, '../../../../packages/web/dist');
+  const webPackageDir = resolve(import.meta.dir, '../../../../packages/web');
 
   let webDistPath: string;
 
-  // Check if we need to build the web app
+  // Check if we're using bundled assets (npm install) or dev mode
   if (existsSync(bundledWebPath)) {
+    // Using bundled assets from npm - these are pre-built
+    // Note: bundled assets are built with a placeholder base path that gets patched
     webDistPath = bundledWebPath;
-  } else if (existsSync(devWebPath)) {
-    webDistPath = devWebPath;
-  } else {
-    // Need to build the web app
+  } else if (existsSync(webPackageDir)) {
+    // Dev mode - always rebuild with correct base path
     console.log(pc.dim('Building web app...'));
-    const webPackageDir = resolve(import.meta.dir, '../../../../packages/web');
-
-    if (!existsSync(webPackageDir)) {
-      console.error(pc.red('Error: Web package not found'));
-      console.error('This is a packaging error - please report it at https://github.com/Michaelliv/mental/issues');
-      process.exit(1);
-    }
 
     const buildResult = Bun.spawnSync(['bun', 'run', 'build'], {
       cwd: webPackageDir,
@@ -260,16 +254,21 @@ export async function publish(options: PublishOptions): Promise<void> {
         ...process.env,
         VITE_BASE_PATH: basePath,
       },
-      stdout: 'inherit',
-      stderr: 'inherit',
+      stdout: 'pipe',
+      stderr: 'pipe',
     });
 
     if (buildResult.exitCode !== 0) {
       console.error(pc.red('Error: Failed to build web app'));
+      console.error(buildResult.stderr.toString());
       process.exit(1);
     }
 
     webDistPath = devWebPath;
+  } else {
+    console.error(pc.red('Error: Web package not found'));
+    console.error('This is a packaging error - please report it at https://github.com/Michaelliv/mental/issues');
+    process.exit(1);
   }
 
   // Create output directory

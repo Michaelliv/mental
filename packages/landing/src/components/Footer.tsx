@@ -21,14 +21,6 @@ export function Footer() {
             Documentation
           </a>
           <a
-            href="https://x.com/micLivs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-cream-60 hover:text-cream transition-colors"
-          >
-            @micLivs
-          </a>
-          <a
             href="https://michaellivs.com/"
             target="_blank"
             rel="noopener noreferrer"

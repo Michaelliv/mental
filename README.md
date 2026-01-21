@@ -1,6 +1,10 @@
 # Mental Model
 
-> Your understanding of your codebase, externalized
+> Don't become a stranger in your own codebase.
+
+```bash
+npm install -g @mentalmodel/cli
+```
 
 ## The Problem
 

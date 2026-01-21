@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "bun run --watch packages/cli/src/index.ts",
     "build": "bun run packages/cli/build.ts && bun run packages/web/build.ts",
-    "web:dev": "cd packages/web && bun run dev"
+    "web:dev": "cd packages/web && bun run dev",
+    "release": "./scripts/release.sh",
+    "release:patch": "./scripts/release.sh patch",
+    "release:minor": "./scripts/release.sh minor",
+    "release:major": "./scripts/release.sh major"
   },
   "devDependencies": {
     "@clack/prompts": "^0.11.0",

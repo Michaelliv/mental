@@ -3,11 +3,15 @@ import useSWR from 'swr';
 import type { MentalModel } from '@mentalmodel/shared';
 import { buildModelView } from './lib/model-view';
 import { StructureView } from './components/StructureView';
+import { SpatialView } from './components/SpatialView';
 import { fetchers } from './lib/api';
+
+type ViewMode = 'structure' | 'spatial';
 
 export default function App() {
   const { data: model, error, isLoading } = useSWR<MentalModel>('/api/model', fetchers.model);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('structure');
 
   const modelView = useMemo(() => {
     if (!model) return null;
@@ -138,13 +142,44 @@ export default function App() {
               )}
             </div>
 
+            {/* View mode toggle */}
+            <div className="flex items-center rounded-lg p-0.5 bg-warm-elevated border border-border-default">
+              <button
+                onClick={() => setViewMode('structure')}
+                aria-label="Columns view"
+                aria-pressed={viewMode === 'structure'}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 ${
+                  viewMode === 'structure'
+                    ? 'bg-warm-surface text-cream shadow-sm'
+                    : 'text-cream-45 hover:text-cream-60'
+                }`}
+              >
+                Columns
+              </button>
+              <button
+                onClick={() => setViewMode('spatial')}
+                aria-label="Regions view"
+                aria-pressed={viewMode === 'spatial'}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 ${
+                  viewMode === 'spatial'
+                    ? 'bg-warm-surface text-cream shadow-sm'
+                    : 'text-cream-45 hover:text-cream-60'
+                }`}
+              >
+                Regions
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main content */}
       <main className="flex-1 min-h-0">
-        <StructureView data={modelView} model={model} searchQuery={searchQuery} />
+        {viewMode === 'structure' ? (
+          <StructureView data={modelView} model={model} searchQuery={searchQuery} />
+        ) : (
+          <SpatialView data={modelView} model={model} searchQuery={searchQuery} />
+        )}
       </main>
     </div>
   );

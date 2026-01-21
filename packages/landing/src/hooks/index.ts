@@ -1,0 +1,1 @@
+export { useScrollAnimation } from './useScrollAnimation';

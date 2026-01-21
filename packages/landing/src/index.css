@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warm light background palette */
+  --color-warm-deep: #FAF7F2;
+  --color-warm-surface: #F5F1EA;
+  --color-warm-elevated: #EFEBE4;
+
+  /* Warm dark text palette */
+  --color-cream: #2C2416;
+  --color-cream-75: rgba(44, 36, 22, 0.75);
+  --color-cream-60: rgba(44, 36, 22, 0.60);
+  --color-cream-45: rgba(44, 36, 22, 0.45);
+  --color-cream-28: rgba(44, 36, 22, 0.28);
+
+  /* Entity colors - muted primary, soothing */
+  --color-domain: #5E8B5E;
+  --color-capability: #5E7B9B;
+  --color-aspect: #9B6B6B;
+  --color-decision: #9B8555;
+
+  /* Borders - warm brown tints */
+  --color-border-subtle: rgba(44, 36, 22, 0.08);
+  --color-border-default: rgba(44, 36, 22, 0.15);
+
+  /* Fonts */
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-warm-deep);
+  color: var(--color-cream);
+}
+
+/* Dotted background */
+.bg-dotted {
+  background-color: var(--color-warm-deep);
+  background-image: radial-gradient(circle, rgba(44, 36, 22, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Glyph styling */
+.glyph {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  display: inline-block;
+}
+
+.glyph-domain { color: var(--color-domain); }
+.glyph-capability { color: var(--color-capability); }
+.glyph-aspect { color: var(--color-aspect); }
+.glyph-decision { color: var(--color-decision); }
+
+/* Connection lines */
+.connection-line {
+  stroke: var(--color-border-default);
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.connection-line.animated {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+
+/* Terminal cursor */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.2em;
+  background-color: var(--color-cream);
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(44, 36, 22, 0.12);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

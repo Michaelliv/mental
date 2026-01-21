@@ -26,6 +26,7 @@ export interface Domain {
   references?: string[];
   files?: string[];
   decisions?: string[]; // Decision IDs
+  timestamp?: string; // ISO timestamp from event sourcing
 }
 
 export interface Capability {
@@ -35,6 +36,7 @@ export interface Capability {
   composes?: string[];
   files?: string[];
   decisions?: string[]; // Decision IDs
+  timestamp?: string; // ISO timestamp from event sourcing
 }
 
 export interface Aspect {
@@ -46,6 +48,7 @@ export interface Aspect {
   };
   files?: string[];
   decisions?: string[]; // Decision IDs
+  timestamp?: string; // ISO timestamp from event sourcing
 }
 
 // ============================================================================

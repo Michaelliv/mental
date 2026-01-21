@@ -13,6 +13,7 @@ export function buildModelView(model: MentalModel): ModelView {
       description: domain.description,
       files: domain.files,
       decisions: domain.decisions,
+      timestamp: domain.timestamp,
     });
 
     // Add references connections (domain → domain)
@@ -36,6 +37,7 @@ export function buildModelView(model: MentalModel): ModelView {
       description: capability.description,
       files: capability.files,
       decisions: capability.decisions,
+      timestamp: capability.timestamp,
     });
 
     // Add operates_on connections (capability → domain)
@@ -70,6 +72,7 @@ export function buildModelView(model: MentalModel): ModelView {
       description: aspect.description,
       files: aspect.files,
       decisions: aspect.decisions,
+      timestamp: aspect.timestamp,
     });
 
     // Add applies_to connections (aspect → capability/domain)

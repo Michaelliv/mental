@@ -152,15 +152,24 @@ export function parseNDJSON(content: string, asOfTimestamp?: string): MentalMode
         case 'EntityCreated': {
           const created = event as EntityCreatedEvent;
           switch (created.entityType) {
-            case 'domain':
-              domains[created.entityId] = created.payload as Domain;
+            case 'domain': {
+              const domain = created.payload as Domain;
+              domain.timestamp = created.timestamp;
+              domains[created.entityId] = domain;
               break;
-            case 'capability':
-              capabilities[created.entityId] = created.payload as Capability;
+            }
+            case 'capability': {
+              const capability = created.payload as Capability;
+              capability.timestamp = created.timestamp;
+              capabilities[created.entityId] = capability;
               break;
-            case 'aspect':
-              aspects[created.entityId] = created.payload as Aspect;
+            }
+            case 'aspect': {
+              const aspect = created.payload as Aspect;
+              aspect.timestamp = created.timestamp;
+              aspects[created.entityId] = aspect;
               break;
+            }
             case 'decision':
               decisions[created.entityId] = created.payload as Decision;
               break;

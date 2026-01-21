@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef, useState, useEffect } from 'react';
 import type { Entity, Decision } from '@mentalmodel/shared';
 import { Slider } from '@/components/ui/slider';
 
@@ -15,7 +15,37 @@ interface TimelineEvent {
   label: string;
 }
 
+interface EventCluster {
+  x: number; // percentage 0-100
+  events: TimelineEvent[];
+  primaryType: TimelineEvent['type'];
+}
+
+const glyphConfig: Record<TimelineEvent['type'], { glyph: string; colorClass: string }> = {
+  domain: { glyph: '□', colorClass: 'text-domain' },
+  capability: { glyph: '◇', colorClass: 'text-capability' },
+  aspect: { glyph: '○', colorClass: 'text-aspect' },
+  decision: { glyph: '⚡', colorClass: 'text-decision' },
+};
+
+const COLLISION_THRESHOLD_PX = 20; // minimum pixels between events before clustering
+
 export function TimelineBar({ entities, decisions, currentTime, onTimeChange }: TimelineBarProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Track container width for collision detection
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
   const { events, timeRange } = useMemo(() => {
     const events: TimelineEvent[] = [];
 
@@ -47,6 +77,47 @@ export function TimelineBar({ entities, decisions, currentTime, onTimeChange }: 
 
     return { events, timeRange: { min: minTime, max: maxTime } };
   }, [entities, decisions]);
+
+  // Cluster nearby events
+  const clusters = useMemo(() => {
+    if (containerWidth === 0 || events.length === 0) return [];
+
+    const duration = timeRange.max - timeRange.min;
+    if (duration === 0) {
+      return [{ x: 50, events, primaryType: events[0].type }] as EventCluster[];
+    }
+
+    const thresholdPercent = (COLLISION_THRESHOLD_PX / containerWidth) * 100;
+    const result: EventCluster[] = [];
+
+    for (const event of events) {
+      const x = ((event.time - timeRange.min) / duration) * 100;
+
+      // Try to add to existing cluster
+      const existingCluster = result.find(c => Math.abs(c.x - x) < thresholdPercent);
+      if (existingCluster) {
+        existingCluster.events.push(event);
+        // Update x to be average of all events in cluster
+        const avgTime = existingCluster.events.reduce((sum, e) => sum + e.time, 0) / existingCluster.events.length;
+        existingCluster.x = ((avgTime - timeRange.min) / duration) * 100;
+      } else {
+        result.push({ x, events: [event], primaryType: event.type });
+      }
+    }
+
+    return result;
+  }, [events, timeRange, containerWidth]);
+
+  // Calculate how "near" a cluster is to the current time (for highlighting)
+  const getClusterNearness = useCallback((cluster: EventCluster) => {
+    const duration = timeRange.max - timeRange.min;
+    if (duration === 0) return 1;
+    const avgTime = cluster.events.reduce((sum, e) => sum + e.time, 0) / cluster.events.length;
+    const distance = Math.abs(avgTime - currentTime) / duration;
+    if (distance < 0.02) return 1;
+    if (distance < 0.1) return 0.85;
+    return 0.7;
+  }, [currentTime, timeRange]);
 
   const handleSliderChange = useCallback((value: number[]) => {
     onTimeChange(value[0]);
@@ -93,22 +164,66 @@ export function TimelineBar({ entities, decisions, currentTime, onTimeChange }: 
 
   return (
     <div className="flex-shrink-0 border-t border-border-default bg-warm-surface px-4 py-3 select-none">
-      {/* Slider */}
-      <div className="relative">
-        <Slider
-          value={[currentTime]}
-          min={timeRange.min}
-          max={timeRange.max}
-          step={1000}
-          onValueChange={handleSliderChange}
-          className="w-full"
-        />
+      {/* Timeline visualization container */}
+      <div ref={containerRef} className="relative">
+        {/* Glyphs and ticks layer - above slider */}
+        <div className="relative h-8 mb-0.5">
+          {clusters.map((cluster, i) => {
+            const config = glyphConfig[cluster.primaryType];
+            const nearness = getClusterNearness(cluster);
+            const count = cluster.events.length;
+            const tooltip = cluster.events.map(e => e.label).join(', ');
 
-        {/* NOW button overlay */}
+            return (
+              <div
+                key={`cluster-${i}`}
+                className="absolute flex flex-col items-center"
+                style={{
+                  left: `${cluster.x}%`,
+                  top: 0,
+                  bottom: 0,
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                {/* Glyph */}
+                <button
+                  onClick={() => onTimeChange(cluster.events[0].time)}
+                  title={tooltip}
+                  className={`transition-all duration-150 text-xs font-mono ${config.colorClass} hover:scale-125`}
+                  style={{
+                    opacity: nearness,
+                    textShadow: nearness === 1 ? '0 0 8px currentColor' : 'none',
+                  }}
+                >
+                  {config.glyph}
+                  {count > 1 && (
+                    <sup className="text-[8px] font-bold ml-px">{count}</sup>
+                  )}
+                </button>
+                {/* Tick mark */}
+                <div className="flex-1 w-0.5 bg-cream-45" />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Slider */}
+        <div className="relative">
+          <Slider
+            value={[currentTime]}
+            min={timeRange.min}
+            max={timeRange.max}
+            step={1000}
+            onValueChange={handleSliderChange}
+            className="w-full relative z-10"
+          />
+        </div>
+
+        {/* NOW button overlay - above slider */}
         {!isAtNow && (
           <button
             onClick={() => onTimeChange(timeRange.max)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-cream bg-warm-elevated hover:bg-warm-deep rounded transition-colors border border-border-subtle"
+            className="absolute right-0 top-0 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-cream bg-warm-elevated hover:bg-warm-deep rounded transition-colors border border-border-subtle"
           >
             Now →
           </button>

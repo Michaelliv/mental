@@ -1,6 +1,6 @@
 {
   "name": "@mentalmodel/cli",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "The mental model layer for agent-written code",
   "type": "module",
   "bin": {

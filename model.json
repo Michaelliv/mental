@@ -1,0 +1,437 @@
+{
+  "domains": {
+    "MentalModel": {
+      "name": "MentalModel",
+      "description": "The externalized representation of a developer's understanding of a codebase - contains domains, capabilities, aspects, and decisions",
+      "timestamp": "2026-01-20T22:33:04.177Z",
+      "files": [
+        "packages/shared/src/types.ts",
+        "packages/shared/src/storage.ts"
+      ]
+    },
+    "Domain": {
+      "name": "Domain",
+      "description": "A core business concept (noun) - represents what exists in the system, has identity and lifecycle",
+      "references": [
+        "MentalModel"
+      ],
+      "timestamp": "2026-01-20T22:33:09.772Z",
+      "files": [
+        "packages/shared/src/types.ts",
+        "packages/shared/src/commands/add-domain.ts",
+        "packages/cli/src/commands/add-domain.ts"
+      ]
+    },
+    "Capability": {
+      "name": "Capability",
+      "description": "An action the system performs (verb) - operates on domains, can compose other capabilities",
+      "references": [
+        "MentalModel",
+        "Domain"
+      ],
+      "timestamp": "2026-01-20T22:33:09.894Z",
+      "files": [
+        "packages/shared/src/types.ts",
+        "packages/shared/src/commands/add-capability.ts",
+        "packages/cli/src/commands/add-capability.ts"
+      ]
+    },
+    "Aspect": {
+      "name": "Aspect",
+      "description": "A cross-cutting concern - applies governance (auth, validation, retry) across multiple capabilities or domains",
+      "references": [
+        "MentalModel",
+        "Capability",
+        "Domain"
+      ],
+      "timestamp": "2026-01-20T22:33:10.033Z",
+      "files": [
+        "packages/shared/src/types.ts",
+        "packages/shared/src/commands/add-aspect.ts",
+        "packages/cli/src/commands/add-aspect.ts"
+      ]
+    },
+    "Decision": {
+      "name": "Decision",
+      "description": "A recorded architectural choice with rationale - captures the 'why' behind system design, can be superseded",
+      "references": [
+        "MentalModel",
+        "Domain",
+        "Capability",
+        "Aspect"
+      ],
+      "timestamp": "2026-01-20T22:33:10.160Z",
+      "files": [
+        "packages/shared/src/types.ts",
+        "packages/shared/src/commands/add-decision.ts",
+        "packages/cli/src/commands/add-decision.ts",
+        "packages/shared/src/commands/supersede-decision.ts"
+      ]
+    },
+    "ModelEvent": {
+      "name": "ModelEvent",
+      "description": "An immutable record of a change to the mental model - enables event sourcing with full audit trail",
+      "references": [
+        "MentalModel"
+      ],
+      "timestamp": "2026-01-20T22:33:10.288Z",
+      "files": [
+        "packages/shared/src/types.ts",
+        "packages/shared/src/storage.ts"
+      ]
+    }
+  },
+  "capabilities": {
+    "AddEntity": {
+      "name": "AddEntity",
+      "description": "Creates a new domain, capability, aspect, or decision in the mental model",
+      "operates_on": [
+        "MentalModel",
+        "Domain",
+        "Capability",
+        "Aspect",
+        "Decision",
+        "ModelEvent"
+      ],
+      "timestamp": "2026-01-20T22:33:22.300Z",
+      "files": [
+        "packages/shared/src/commands/add-domain.ts",
+        "packages/shared/src/commands/add-capability.ts",
+        "packages/shared/src/commands/add-aspect.ts",
+        "packages/shared/src/commands/add-decision.ts",
+        "packages/cli/src/commands/add-domain.ts",
+        "packages/cli/src/commands/add-capability.ts",
+        "packages/cli/src/commands/add-aspect.ts",
+        "packages/cli/src/commands/add-decision.ts"
+      ]
+    },
+    "UpdateEntity": {
+      "name": "UpdateEntity",
+      "description": "Modifies an existing entity's properties with field-level change tracking",
+      "operates_on": [
+        "MentalModel",
+        "Domain",
+        "Capability",
+        "Aspect",
+        "Decision",
+        "ModelEvent"
+      ],
+      "timestamp": "2026-01-20T22:33:22.436Z",
+      "files": [
+        "packages/shared/src/commands/update.ts",
+        "packages/cli/src/commands/update.ts"
+      ]
+    },
+    "DeleteEntity": {
+      "name": "DeleteEntity",
+      "description": "Removes an entity from the mental model",
+      "operates_on": [
+        "MentalModel",
+        "Domain",
+        "Capability",
+        "Aspect",
+        "Decision",
+        "ModelEvent"
+      ],
+      "timestamp": "2026-01-20T22:33:22.565Z",
+      "files": [
+        "packages/shared/src/commands/delete.ts",
+        "packages/cli/src/commands/delete.ts"
+      ]
+    },
+    "RenameEntity": {
+      "name": "RenameEntity",
+      "description": "Renames an entity with optional cascade to update all references",
+      "operates_on": [
+        "MentalModel",
+        "Domain",
+        "Capability",
+        "Aspect",
+        "Decision",
+        "ModelEvent"
+      ],
+      "timestamp": "2026-01-20T22:33:22.694Z",
+      "files": [
+        "packages/shared/src/commands/update.ts",
+        "packages/cli/src/commands/update.ts"
+      ]
+    },
+    "SupersedeDecision": {
+      "name": "SupersedeDecision",
+      "description": "Marks a decision as superseded and records the new decision with rationale",
+      "operates_on": [
+        "Decision",
+        "ModelEvent"
+      ],
+      "timestamp": "2026-01-20T22:33:22.840Z",
+      "files": [
+        "packages/shared/src/commands/supersede-decision.ts",
+        "packages/cli/src/commands/supersede-decision.ts"
+      ]
+    },
+    "ShowModel": {
+      "name": "ShowModel",
+      "description": "Displays the current mental model as formatted text in the terminal",
+      "operates_on": [
+        "MentalModel"
+      ],
+      "timestamp": "2026-01-20T22:33:22.961Z",
+      "files": [
+        "packages/cli/src/commands/show.ts"
+      ]
+    },
+    "VisualizeModel": {
+      "name": "VisualizeModel",
+      "description": "Renders an interactive web-based visualization with entity selection, connection highlighting, and decision viewing",
+      "operates_on": [
+        "MentalModel",
+        "Domain",
+        "Capability",
+        "Aspect",
+        "Decision"
+      ],
+      "timestamp": "2026-01-20T22:33:28.682Z",
+      "files": [
+        "packages/cli/src/commands/view.ts",
+        "packages/web/src/App.tsx",
+        "packages/web/src/components/StructureView.tsx",
+        "packages/web/src/components/EntityColumn.tsx",
+        "packages/web/src/components/EntityCard.tsx",
+        "packages/web/src/components/DetailPanel.tsx",
+        "packages/web/src/lib/model-view.ts"
+      ]
+    },
+    "ReplayEvents": {
+      "name": "ReplayEvents",
+      "description": "Reconstructs mental model state by replaying event log from storage",
+      "operates_on": [
+        "MentalModel",
+        "ModelEvent"
+      ],
+      "timestamp": "2026-01-20T22:33:28.823Z",
+      "files": [
+        "packages/shared/src/storage.ts",
+        "packages/cli/src/lib/storage.ts"
+      ]
+    },
+    "OnboardAgent": {
+      "name": "OnboardAgent",
+      "description": "Injects mental model documentation into CLAUDE.md for AI agent context",
+      "operates_on": [
+        "MentalModel"
+      ],
+      "timestamp": "2026-01-20T22:33:28.972Z",
+      "files": [
+        "packages/cli/src/commands/onboard.ts"
+      ]
+    }
+  },
+  "aspects": {
+    "EventSourcing": {
+      "name": "EventSourcing",
+      "description": "All mutations are recorded as immutable events - enables audit trail, time-travel, and reconstruction",
+      "applies_to": {
+        "capabilities": [
+          "AddEntity",
+          "UpdateEntity",
+          "DeleteEntity",
+          "RenameEntity",
+          "SupersedeDecision",
+          "ReplayEvents"
+        ]
+      },
+      "timestamp": "2026-01-20T22:33:39.238Z",
+      "files": [
+        "packages/shared/src/storage.ts",
+        "packages/shared/src/types.ts",
+        "packages/cli/src/lib/storage.ts"
+      ]
+    },
+    "Validation": {
+      "name": "Validation",
+      "description": "Entity names, references, and relationships are validated before events are created",
+      "applies_to": {
+        "capabilities": [
+          "AddEntity",
+          "UpdateEntity",
+          "RenameEntity"
+        ]
+      },
+      "timestamp": "2026-01-20T22:33:39.384Z",
+      "files": [
+        "packages/shared/src/commands/add-domain.ts",
+        "packages/shared/src/commands/add-capability.ts",
+        "packages/shared/src/commands/add-aspect.ts",
+        "packages/shared/src/commands/update.ts"
+      ]
+    },
+    "CascadeReferences": {
+      "name": "CascadeReferences",
+      "description": "When entities are renamed or deleted, references from other entities can be automatically updated",
+      "applies_to": {
+        "capabilities": [
+          "RenameEntity",
+          "DeleteEntity"
+        ]
+      },
+      "timestamp": "2026-01-20T22:33:39.522Z",
+      "files": [
+        "packages/shared/src/commands/update.ts",
+        "packages/shared/src/commands/delete.ts"
+      ]
+    },
+    "InteractivePrompts": {
+      "name": "InteractivePrompts",
+      "description": "CLI commands use interactive prompts to guide users through multi-field input",
+      "applies_to": {
+        "capabilities": [
+          "AddEntity",
+          "UpdateEntity",
+          "DeleteEntity"
+        ]
+      },
+      "timestamp": "2026-01-20T22:33:39.655Z",
+      "files": [
+        "packages/cli/src/lib/interactive.ts",
+        "packages/cli/src/commands/add-domain.ts",
+        "packages/cli/src/commands/add-capability.ts",
+        "packages/cli/src/commands/add-aspect.ts"
+      ]
+    }
+  },
+  "decisions": {
+    "dec-1768948436560": {
+      "id": "dec-1768948436560",
+      "what": "Event sourcing over direct state mutation",
+      "why": "Provides complete audit trail, enables time-travel to any point, supports undo/redo, and makes the model's evolution transparent",
+      "when": "2026-01-20T22:33:56.560Z",
+      "status": "active",
+      "relates_to": {
+        "domains": [
+          "ModelEvent"
+        ],
+        "aspects": [
+          "EventSourcing"
+        ]
+      }
+    },
+    "dec-1768948436728": {
+      "id": "dec-1768948436728",
+      "what": "Pure command functions in shared package",
+      "why": "Separates business logic from I/O - enables testing without filesystem, allows reuse across CLI and potential future APIs, makes commands composable",
+      "when": "2026-01-20T22:33:56.728Z",
+      "status": "active",
+      "relates_to": {
+        "capabilities": [
+          "AddEntity",
+          "UpdateEntity",
+          "DeleteEntity"
+        ]
+      }
+    },
+    "dec-1768948436874": {
+      "id": "dec-1768948436874",
+      "what": "Four entity types: Domain, Capability, Aspect, Decision",
+      "why": "Maps to natural language patterns - nouns (what exists), verbs (what it does), adverbs (how governed), and rationale (why). Simpler than UML, captures what matters for understanding",
+      "when": "2026-01-20T22:33:56.874Z",
+      "status": "active",
+      "relates_to": {
+        "domains": [
+          "Domain",
+          "Capability",
+          "Aspect",
+          "Decision"
+        ]
+      }
+    },
+    "dec-1768948437017": {
+      "id": "dec-1768948437017",
+      "what": "Monorepo with cli, shared, web packages",
+      "why": "Clear separation of concerns - CLI handles I/O and user interaction, shared contains pure business logic, web provides visualization. Enables independent development and testing",
+      "when": "2026-01-20T22:33:57.017Z",
+      "status": "active",
+      "relates_to": {
+        "domains": [
+          "MentalModel"
+        ]
+      }
+    },
+    "dec-1768948437154": {
+      "id": "dec-1768948437154",
+      "what": "NDJSON storage format",
+      "why": "Human-readable, appendable, streamable - each event is one line, easy to inspect with standard tools, no need for database setup",
+      "when": "2026-01-20T22:33:57.154Z",
+      "status": "active",
+      "relates_to": {
+        "domains": [
+          "ModelEvent"
+        ],
+        "aspects": [
+          "EventSourcing"
+        ]
+      }
+    },
+    "dec-1768948437291": {
+      "id": "dec-1768948437291",
+      "what": "Embed web bundle in CLI for view command",
+      "why": "Zero external dependencies for visualization - user runs 'mental view' and gets instant local server. No npm install, no build step, just works",
+      "when": "2026-01-20T22:33:57.291Z",
+      "status": "active",
+      "relates_to": {
+        "capabilities": [
+          "VisualizeModel"
+        ]
+      }
+    },
+    "dec-1768976091873": {
+      "id": "dec-1768976091873",
+      "what": "Use Claude Code hooks for workflow integration",
+      "why": "Hooks provide lightweight, non-intrusive reminders at key moments (like pre-push) without injecting large context on every session",
+      "when": "2026-01-21T06:14:51.873Z",
+      "status": "active",
+      "relates_to": {
+        "capabilities": [
+          "OnboardAgent"
+        ]
+      }
+    },
+    "dec-1768979072186": {
+      "id": "dec-1768979072186",
+      "what": "Dual view modes: Columns and Regions",
+      "why": "Columns view (by type) supports comparison across entity types; Regions view (by domain) shows containment and ownership relationships. Different mental tasks benefit from different spatial organizations.",
+      "when": "2026-01-21T07:04:32.186Z",
+      "status": "active",
+      "relates_to": {
+        "capabilities": [
+          "VisualizeModel"
+        ]
+      },
+      "docs": [
+        "packages/web/src/components/SpatialView.tsx",
+        "packages/web/src/components/DomainRegion.tsx"
+      ],
+      "context": "Initial visualization had only column view; users needed different mental models for different tasks"
+    }
+  },
+  "version": "0.1.0",
+  "lastUpdated": "2026-01-21T07:13:37.373Z",
+  "github": {
+    "owner": "Michaelliv",
+    "repo": "mental",
+    "branch": "main"
+  },
+  "embeddedDocs": {
+    "packages/web/src/components/SpatialView.tsx": {
+      "path": "packages/web/src/components/SpatialView.tsx",
+      "content": "import React, { useMemo, useCallback, useState } from 'react';\nimport type { ModelView, Entity, MentalModel, Decision, Connection } from '@mentalmodel/shared';\nimport { DomainRegion } from './DomainRegion';\nimport { EntityCard } from './EntityCard';\nimport { DetailPanel } from './DetailPanel';\nimport { TimelineBar } from './TimelineBar';\nimport { CodeViewer } from './CodeViewer';\nimport { DecisionViewer } from './DecisionViewer';\nimport { Sheet, SheetContent } from '@/components/ui/sheet';\nimport { useEntitySelection, useConnectionHighlighting, useEntityFilter } from '../hooks';\n\ninterface SpatialViewProps {\n  data: ModelView;\n  model: MentalModel;\n  searchQuery: string;\n}\n\n/**\n * Group capabilities by their primary domain (first operates_on connection)\n */\nfunction groupCapabilitiesByDomain(\n  capabilities: Entity[],\n  connections: Connection[]\n): Record<string, Entity[]> {\n  const groups: Record<string, Entity[]> = {};\n\n  for (const cap of capabilities) {\n    const primaryDomain = connections\n      .filter((c) => c.from === cap.id && c.type === 'operates_on')\n      .map((c) => c.to)[0] ?? 'uncategorized';\n\n    if (!groups[primaryDomain]) {\n      groups[primaryDomain] = [];\n    }\n    groups[primaryDomain].push(cap);\n  }\n\n  return groups;\n}\n\nexport function SpatialView({ data, model, searchQuery }: SpatialViewProps) {\n  // Use the same hooks as StructureView for consistent behavior\n  const {\n    selectedEntity,\n    hoveredEntityId,\n    lastVisitedEntityId,\n    activeEntityId,\n    handleSelect,\n    handleHover,\n    clearSelection,\n  } = useEntitySelection(data.entities);\n\n  // Time filter state\n  const [currentTime, setCurrentTime] = React.useState<number>(Date.now());\n\n  // Filter entities by search query and time\n  const { filteredEntities } = useEntityFilter(data.entities, {\n    searchQuery,\n    currentTime,\n  });\n\n  // Calculate connection highlighting\n  const { directConnections, transitiveConnections } = useConnectionHighlighting(\n    activeEntityId,\n    data.connections\n  );\n\n  // Split entities by type\n  const { aspects, capabilities, domains } = useMemo(() => {\n    const aspects: Entity[] = [];\n    const capabilities: Entity[] = [];\n    const domains: Entity[] = [];\n\n    for (const entity of filteredEntities) {\n      if (entity.type === 'aspect') aspects.push(entity);\n      else if (entity.type === 'capability') capabilities.push(entity);\n      else if (entity.type === 'domain') domains.push(entity);\n    }\n\n    return { aspects, capabilities, domains };\n  }, [filteredEntities]);\n\n  // Group capabilities by their primary domain\n  const capabilitiesByDomain = useMemo(() => {\n    return groupCapabilitiesByDomain(capabilities, data.connections);\n  }, [capabilities, data.connections]);\n\n  // Create a map of domain entities by ID for quick lookup\n  const domainMap = useMemo(() => {\n    const map: Record<string, Entity> = {};\n    for (const domain of domains) {\n      map[domain.id] = domain;\n    }\n    return map;\n  }, [domains]);\n\n  // Get domains that have capabilities, plus domains with no capabilities\n  const domainRegions = useMemo(() => {\n    const regions: Array<{ domain: Entity | null; capabilities: Entity[] }> = [];\n\n    // Add domains with capabilities\n    for (const domain of domains) {\n      const caps = capabilitiesByDomain[domain.id] || [];\n      regions.push({ domain, capabilities: caps });\n    }\n\n    // Add uncategorized region if there are orphan capabilities\n    const uncategorized = capabilitiesByDomain['uncategorized'];\n    if (uncategorized && uncategorized.length > 0) {\n      regions.push({ domain: null, capabilities: uncategorized });\n    }\n\n    return regions;\n  }, [domains, capabilitiesByDomain]);\n\n  const handleNavigate = useCallback(\n    (entityId: string) => {\n      const entity = data.entities.find((e) => e.id === entityId);\n      if (entity) {\n        handleSelect(entity);\n      }\n    },\n    [data.entities, handleSelect]\n  );\n\n  const handleCloseDetail = useCallback(() => {\n    clearSelection();\n    setSelectedFile(null);\n  }, [clearSelection]);\n\n  // File viewer state\n  const [selectedFile, setSelectedFile] = useState<string | null>(null);\n\n  const handleFileSelect = useCallback((file: string) => {\n    setSelectedFile(file);\n  }, []);\n\n  const handleCloseFile = useCallback(() => {\n    setSelectedFile(null);\n  }, []);\n\n  // Decision viewer state\n  const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null);\n\n  const handleDecisionSelect = useCallback((decision: Decision) => {\n    setSelectedDecision(decision);\n  }, []);\n\n  const handleCloseDecision = useCallback(() => {\n    setSelectedDecision(null);\n  }, []);\n\n  return (\n    <div className=\"flex flex-col h-full\">\n      {/* Main scrollable area */}\n      <div className=\"flex-1 min-h-0 overflow-auto p-4\">\n        {/* Aspect bar at top - scrolls with content */}\n        {aspects.length > 0 && (\n          <div className=\"mb-4\">\n            <div className=\"flex items-center gap-2 mb-2\">\n              <span className=\"text-aspect text-sm font-mono\">○</span>\n              <span className=\"text-xs font-medium text-cream-45 uppercase tracking-wide\">\n                Aspects\n              </span>\n              <span className=\"text-xs text-cream-28\">({aspects.length})</span>\n            </div>\n            <div className=\"flex gap-2 flex-wrap\">\n              {aspects.map((aspect) => (\n                <div key={aspect.id} className=\"w-56\">\n                  <EntityCard\n                    entity={aspect}\n                    connections={data.connections}\n                    isHovered={hoveredEntityId === aspect.id}\n                    isDirectConnection={directConnections.has(aspect.id)}\n                    isTransitiveConnection={transitiveConnections.has(aspect.id)}\n                    isSelected={selectedEntity?.id === aspect.id}\n                    isLastVisited={lastVisitedEntityId === aspect.id}\n                    onHover={handleHover}\n                    onClick={handleSelect}\n                  />\n                </div>\n              ))}\n            </div>\n          </div>\n        )}\n\n        {/* Domain regions grid */}\n        {domainRegions.length > 0 ? (\n          <div className=\"grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-min\">\n            {domainRegions.map((region) => (\n              <DomainRegion\n                key={region.domain?.id ?? 'uncategorized'}\n                domain={region.domain}\n                capabilities={region.capabilities}\n                connections={data.connections}\n                hoveredEntityId={hoveredEntityId}\n                directConnections={directConnections}\n                transitiveConnections={transitiveConnections}\n                selectedEntityId={selectedEntity?.id ?? null}\n                lastVisitedEntityId={lastVisitedEntityId}\n                onHover={handleHover}\n                onSelect={handleSelect}\n              />\n            ))}\n          </div>\n        ) : (\n          <div className=\"flex items-center justify-center h-full text-cream-45\">\n            <div className=\"text-center\">\n              <div className=\"text-4xl mb-4\">□ ◇</div>\n              <div className=\"text-sm\">No domains or capabilities match your search</div>\n            </div>\n          </div>\n        )}\n      </div>\n\n      {/* Detail panel as sheet overlay */}\n      <Sheet open={!!selectedEntity} onOpenChange={(open) => !open && handleCloseDetail()}>\n        <SheetContent className=\"w-96 p-0 bg-warm-surface [&>button]:hidden\">\n          {selectedEntity && (\n            <DetailPanel\n              entity={selectedEntity}\n              connections={data.connections}\n              model={model}\n              onClose={handleCloseDetail}\n              onNavigate={handleNavigate}\n              onFileSelect={handleFileSelect}\n              onDecisionSelect={handleDecisionSelect}\n            />\n          )}\n        </SheetContent>\n      </Sheet>\n\n      {/* Code viewer as left sheet */}\n      <Sheet open={!!selectedFile} onOpenChange={(open) => !open && handleCloseFile()}>\n        <SheetContent\n          side=\"left\"\n          className=\"w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden\"\n          overlayClassName=\"backdrop-blur-none bg-transparent\"\n        >\n          {selectedFile && <CodeViewer file={selectedFile} onClose={handleCloseFile} />}\n        </SheetContent>\n      </Sheet>\n\n      {/* Decision viewer as left sheet */}\n      <Sheet open={!!selectedDecision} onOpenChange={(open) => !open && handleCloseDecision()}>\n        <SheetContent\n          side=\"left\"\n          className=\"w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden\"\n          overlayClassName=\"backdrop-blur-none bg-transparent\"\n        >\n          {selectedDecision && (\n            <DecisionViewer decision={selectedDecision} onClose={handleCloseDecision} />\n          )}\n        </SheetContent>\n      </Sheet>\n\n      {/* Timeline bar at bottom */}\n      <TimelineBar\n        entities={data.entities}\n        decisions={model.decisions}\n        currentTime={currentTime}\n        onTimeChange={setCurrentTime}\n      />\n    </div>\n  );\n}\n",
+      "isMarkdown": false,
+      "isExternal": false
+    },
+    "packages/web/src/components/DomainRegion.tsx": {
+      "path": "packages/web/src/components/DomainRegion.tsx",
+      "content": "import type { Entity, Connection } from '@mentalmodel/shared';\nimport { EntityCard } from './EntityCard';\nimport { sortByName } from '../lib/connections';\nimport { useMemo } from 'react';\n\ninterface DomainRegionProps {\n  domain: Entity | null; // null for \"Uncategorized\" region\n  capabilities: Entity[];\n  connections: Connection[];\n  hoveredEntityId: string | null;\n  directConnections: Set<string>;\n  transitiveConnections: Set<string>;\n  selectedEntityId: string | null;\n  lastVisitedEntityId: string | null;\n  onHover: (id: string | null) => void;\n  onSelect: (entity: Entity) => void;\n}\n\nexport function DomainRegion({\n  domain,\n  capabilities,\n  connections,\n  hoveredEntityId,\n  directConnections,\n  transitiveConnections,\n  selectedEntityId,\n  lastVisitedEntityId,\n  onHover,\n  onSelect,\n}: DomainRegionProps) {\n  // Sort capabilities alphabetically\n  const sortedCapabilities = useMemo(() => {\n    return sortByName(capabilities, 'asc');\n  }, [capabilities]);\n\n  // Check if domain itself is highlighted\n  const isDomainHighlighted = domain && (\n    hoveredEntityId === domain.id ||\n    selectedEntityId === domain.id ||\n    directConnections.has(domain.id) ||\n    transitiveConnections.has(domain.id)\n  );\n\n  const regionLabel = domain ? domain.label : 'Uncategorized';\n  const regionDescription = domain?.description;\n\n  return (\n    <div\n      className={`rounded-xl border-2 p-4 transition-all duration-150 ${\n        isDomainHighlighted\n          ? 'border-domain/60 bg-warm-surface/70 shadow-lg shadow-domain/10'\n          : 'border-domain/30 bg-warm-surface/50'\n      }`}\n    >\n      {/* Region header */}\n      <button\n        onClick={() => domain && onSelect(domain)}\n        onMouseEnter={() => domain && onHover(domain.id)}\n        onMouseLeave={() => onHover(null)}\n        disabled={!domain}\n        className={`w-full text-left mb-3 pb-2 border-b border-border-subtle ${\n          domain ? 'cursor-pointer hover:opacity-80' : 'cursor-default'\n        }`}\n      >\n        <div className=\"flex items-center gap-2\">\n          <span className={`text-lg font-mono ${isDomainHighlighted ? 'text-domain brightness-125' : 'text-domain'}`}>\n            □\n          </span>\n          <h3 className={`font-semibold transition-colors ${\n            isDomainHighlighted ? 'text-cream' : 'text-cream-75'\n          }`}>\n            {regionLabel}\n          </h3>\n          <span className=\"text-xs text-cream-28 ml-auto\">\n            {capabilities.length} {capabilities.length === 1 ? 'capability' : 'capabilities'}\n          </span>\n        </div>\n        {regionDescription && (\n          <p className=\"text-xs text-cream-45 mt-1 line-clamp-1\">\n            {regionDescription}\n          </p>\n        )}\n      </button>\n\n      {/* Capabilities within this region */}\n      {sortedCapabilities.length > 0 ? (\n        <div className=\"flex flex-wrap gap-2\">\n          {sortedCapabilities.map((capability) => (\n            <div key={capability.id} className=\"w-full sm:w-[calc(50%-0.25rem)]\">\n              <EntityCard\n                entity={capability}\n                connections={connections}\n                isHovered={hoveredEntityId === capability.id}\n                isDirectConnection={directConnections.has(capability.id)}\n                isTransitiveConnection={transitiveConnections.has(capability.id)}\n                isSelected={selectedEntityId === capability.id}\n                isLastVisited={lastVisitedEntityId === capability.id}\n                onHover={onHover}\n                onClick={onSelect}\n              />\n            </div>\n          ))}\n        </div>\n      ) : (\n        <div className=\"text-center py-6 text-cream-28\">\n          <div className=\"text-lg text-capability mb-1\">◇</div>\n          <div className=\"text-xs\">No capabilities in this domain</div>\n        </div>\n      )}\n    </div>\n  );\n}\n",
+      "isMarkdown": false,
+      "isExternal": false
+    }
+  }
+}

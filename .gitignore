@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Mental model cache (if we add SQLite later)
+.mental/*.db
+.mental/*.db-*
+
+# Keep the NDJSON source of truth
+!.mental/model.ndjson

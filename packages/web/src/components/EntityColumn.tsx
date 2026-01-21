@@ -183,6 +183,7 @@ export function EntityColumn({
           >
             <EntityCard
               entity={entity}
+              connections={connections}
               isHovered={hoveredEntityId === entity.id}
               isDirectConnection={directConnections.has(entity.id)}
               isTransitiveConnection={transitiveConnections.has(entity.id)}

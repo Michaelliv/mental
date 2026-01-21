@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import type { Entity } from '@mentalmodel/shared';
+import { useState, useMemo } from 'react';
+import type { Entity, Connection } from '@mentalmodel/shared';
 
 interface EntityCardProps {
   entity: Entity;
+  connections: Connection[];
   isHovered: boolean;
   isDirectConnection: boolean;
   isTransitiveConnection: boolean;
@@ -30,8 +31,16 @@ const typeConfig = {
   },
 };
 
+// Connection type labels per entity type
+const connectionLabels: Record<Entity['type'], string> = {
+  domain: 'refs',
+  capability: 'on',
+  aspect: 'for',
+};
+
 export function EntityCard({
   entity,
+  connections,
   isHovered,
   isDirectConnection,
   isTransitiveConnection,
@@ -41,6 +50,17 @@ export function EntityCard({
   onClick,
 }: EntityCardProps) {
   const config = typeConfig[entity.type];
+
+  // Compute outgoing connections for this entity
+  const outgoingConnections = useMemo(() => {
+    return connections
+      .filter((c) => c.from === entity.id)
+      .map((c) => c.to);
+  }, [connections, entity.id]);
+
+  // Counts for metadata
+  const fileCount = entity.files?.length ?? 0;
+  const decisionCount = entity.decisions?.length ?? 0;
 
   // Track press state for physical feedback
   const [isPressed, setIsPressed] = useState(false);
@@ -107,6 +127,39 @@ export function EntityCard({
         }`}>
           {entity.description}
         </p>
+
+        {/* Connection preview */}
+        {outgoingConnections.length > 0 && (
+          <div className="mt-2 flex items-center gap-1.5 text-[10px] text-cream-60">
+            <span className="font-medium">{connectionLabels[entity.type]}</span>
+            <span className="truncate text-cream-45">
+              {outgoingConnections.slice(0, 3).join(', ')}
+              {outgoingConnections.length > 3 && (
+                <span className="text-cream-28"> +{outgoingConnections.length - 3}</span>
+              )}
+            </span>
+          </div>
+        )}
+
+        {/* Micro-metadata */}
+        {(fileCount > 0 || decisionCount > 0) && (
+          <div className="mt-1.5 flex items-center gap-3 text-[10px] text-cream-45">
+            {fileCount > 0 && (
+              <span className="flex items-center gap-1" title={`${fileCount} file${fileCount !== 1 ? 's' : ''}`}>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {fileCount}
+              </span>
+            )}
+            {decisionCount > 0 && (
+              <span className="flex items-center gap-1" title={`${decisionCount} decision${decisionCount !== 1 ? 's' : ''}`}>
+                <span>⚡</span>
+                {decisionCount}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </button>
   );

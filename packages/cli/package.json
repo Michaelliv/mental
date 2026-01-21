@@ -1,16 +1,36 @@
 {
   "name": "@mentalmodel/cli",
-  "version": "0.1.0",
+  "version": "0.1.2",
+  "description": "The mental model layer for agent-written code",
   "type": "module",
   "bin": {
     "mental": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target node"
+    "build": "bun build src/index.ts --outdir dist --target node && rm -rf dist/web && cp -r ../web/dist dist/web"
   },
-  "dependencies": {
-    "@mentalmodel/shared": "workspace:*"
+  "keywords": [
+    "mental-model",
+    "ai",
+    "agents",
+    "claude",
+    "architecture",
+    "documentation",
+    "cli"
+  ],
+  "author": "Michael Liv",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Michaelliv/mental.git"
+  },
+  "homepage": "https://mentalmodel.sh",
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -141,3 +141,29 @@ export interface ModelView {
   entities: Entity[];
   connections: Connection[];
 }
+
+// ============================================================================
+// Static Site Types (for GitHub Pages publishing)
+// ============================================================================
+
+/** Embedded documentation for static site generation */
+export interface EmbeddedDoc {
+  path: string;
+  content?: string;
+  isMarkdown?: boolean;
+  isExternal: boolean;
+  error?: string;
+}
+
+/** GitHub repository configuration for static site */
+export interface GitHubConfig {
+  owner: string;
+  repo: string;
+  branch: string;
+}
+
+/** Extended mental model for static site with embedded docs and GitHub config */
+export interface StaticMentalModel extends MentalModel {
+  github?: GitHubConfig;
+  embeddedDocs?: Record<string, EmbeddedDoc>;
+}

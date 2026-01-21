@@ -26,14 +26,16 @@ export async function view(): Promise<void> {
   }
 
   const PORT = 3000;
-  // Resolve from project root
-  const projectRoot = resolve(import.meta.dir, '../../../../');
-  const webDistPath = join(projectRoot, 'packages/web/dist');
+
+  // Look for bundled web assets in dist/web (npm install) or fall back to dev path
+  const bundledWebPath = join(import.meta.dir, 'web');
+  const devWebPath = resolve(import.meta.dir, '../../../../packages/web/dist');
+  const webDistPath = existsSync(bundledWebPath) ? bundledWebPath : devWebPath;
 
   // Check if web dist exists
   if (!existsSync(webDistPath)) {
-    console.error('Error: Web app not built');
-    console.error('Run `bun run build` in packages/web to build the web app');
+    console.error('Error: Web app not found');
+    console.error('This is a packaging error - please report it at https://github.com/Michaelliv/mental/issues');
     process.exit(1);
   }
 

@@ -1,7 +1,11 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+
+// Environment variables for static build:
+// - VITE_BASE_PATH: Base path for GitHub Pages (e.g., /repo-name/)
+// - MENTAL_STATIC_BUILD: Set to 'true' for static site generation
 
 const LANGUAGE_MAP: Record<string, string> = {
   '.ts': 'typescript',
@@ -56,77 +60,86 @@ function parseNDJSON(content: string) {
   return { domains, capabilities, aspects, decisions, version: '0.1.0', lastUpdated };
 }
 
-export default defineConfig({
-  plugins: [
-    react(),
-    // Dev API plugin - reads actual .mental/model.ndjson
-    {
-      name: 'dev-api',
-      configureServer(server) {
-        server.middlewares.use(async (req, res, next) => {
-          if (req.url === '/api/model') {
-            if (!fs.existsSync(MODEL_PATH)) {
-              res.statusCode = 404;
-              res.end(JSON.stringify({ error: 'No .mental/model.ndjson found' }));
+export default defineConfig(({ mode }) => {
+  // Load env file based on mode
+  const env = loadEnv(mode, process.cwd(), '');
+
+  // Base path for GitHub Pages (e.g., /repo-name/)
+  const basePath = env.VITE_BASE_PATH || '/';
+
+  return {
+    base: basePath,
+    plugins: [
+      react(),
+      // Dev API plugin - reads actual .mental/model.ndjson
+      {
+        name: 'dev-api',
+        configureServer(server) {
+          server.middlewares.use(async (req, res, next) => {
+            if (req.url === '/api/model') {
+              if (!fs.existsSync(MODEL_PATH)) {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ error: 'No .mental/model.ndjson found' }));
+                return;
+              }
+              const content = fs.readFileSync(MODEL_PATH, 'utf-8');
+              const model = parseNDJSON(content);
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify(model));
               return;
             }
-            const content = fs.readFileSync(MODEL_PATH, 'utf-8');
-            const model = parseNDJSON(content);
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(model));
-            return;
-          }
-          if (req.url?.startsWith('/api/file')) {
-            const url = new URL(req.url, 'http://localhost');
-            const filePath = url.searchParams.get('path');
+            if (req.url?.startsWith('/api/file')) {
+              const url = new URL(req.url, 'http://localhost');
+              const filePath = url.searchParams.get('path');
 
-            if (!filePath) {
-              res.statusCode = 400;
-              res.end(JSON.stringify({ error: 'Missing path parameter' }));
+              if (!filePath) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'Missing path parameter' }));
+                return;
+              }
+
+              // Resolve relative to project root
+              const absolutePath = path.resolve(PROJECT_ROOT, filePath);
+
+              // Security: ensure within project root
+              if (!absolutePath.startsWith(PROJECT_ROOT)) {
+                res.statusCode = 403;
+                res.end(JSON.stringify({ error: 'Invalid path' }));
+                return;
+              }
+
+              if (!fs.existsSync(absolutePath)) {
+                res.statusCode = 404;
+                res.end(JSON.stringify({ error: 'File not found' }));
+                return;
+              }
+
+              const content = fs.readFileSync(absolutePath, 'utf-8');
+              const ext = path.extname(absolutePath);
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({
+                content,
+                language: LANGUAGE_MAP[ext] || 'plaintext',
+              }));
               return;
             }
-
-            // Resolve relative to project root
-            const absolutePath = path.resolve(PROJECT_ROOT, filePath);
-
-            // Security: ensure within project root
-            if (!absolutePath.startsWith(PROJECT_ROOT)) {
-              res.statusCode = 403;
-              res.end(JSON.stringify({ error: 'Invalid path' }));
-              return;
-            }
-
-            if (!fs.existsSync(absolutePath)) {
-              res.statusCode = 404;
-              res.end(JSON.stringify({ error: 'File not found' }));
-              return;
-            }
-
-            const content = fs.readFileSync(absolutePath, 'utf-8');
-            const ext = path.extname(absolutePath);
-
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({
-              content,
-              language: LANGUAGE_MAP[ext] || 'plaintext',
-            }));
-            return;
-          }
-          next();
-        });
+            next();
+          });
+        },
+      },
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+    server: {
+      port: 3001, // Dev server port (production uses Bun on 3000)
     },
-  },
-  server: {
-    port: 3001, // Dev server port (production uses Bun on 3000)
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-  },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+    },
+  };
 });

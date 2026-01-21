@@ -1,30 +1,21 @@
 import useSWR from 'swr';
 import { Streamdown } from 'streamdown';
 import type { Decision } from '@mentalmodel/shared';
+import { api, type DocContent } from '../lib/api';
 
 interface DecisionViewerProps {
   decision: Decision;
   onClose: () => void;
 }
 
-interface DocData {
-  content?: string;
-  url?: string;
-  isMarkdown?: boolean;
-  isExternal: boolean;
-  error?: string;
-}
-
-const fetcher = async (url: string): Promise<DocData> => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to load doc: ${res.statusText}`);
-  return res.json();
+const fetcher = async (path: string): Promise<DocContent> => {
+  return api.getDoc(path);
 };
 
 function DocRenderer({ docPath }: { docPath: string }) {
-  const { data, error, isLoading } = useSWR<DocData>(
-    `/api/doc?path=${encodeURIComponent(docPath)}`,
-    fetcher
+  const { data, error, isLoading } = useSWR<DocContent>(
+    ['doc', docPath],
+    () => fetcher(docPath)
   );
 
   if (isLoading) {

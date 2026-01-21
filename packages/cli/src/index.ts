@@ -15,6 +15,7 @@ import { updateDomain, updateCapability, updateAspect, updateDecision } from './
 import { supersedeDecision } from './commands/supersede-decision';
 import { show } from './commands/show';
 import { view } from './commands/view';
+import { publish } from './commands/publish';
 import { onboard } from './commands/onboard';
 
 const program = new Command();
@@ -173,6 +174,15 @@ program
   .command('view')
   .description('Open interactive visualization')
   .action(view);
+
+// Publish command
+program
+  .command('publish')
+  .description('Generate static site for GitHub Pages')
+  .option('-o, --output <dir>', 'Output directory (default: .mental/site)')
+  .option('-b, --base <path>', 'Base path for GitHub Pages (auto-detected from git remote)')
+  .option('--branch <branch>', 'Git branch for raw file URLs (default: current branch)')
+  .action(publish);
 
 // Onboard command
 program

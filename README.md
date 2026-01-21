@@ -85,6 +85,9 @@ mental show
 
 # Visualize your understanding
 mental view
+
+# Publish to GitHub Pages
+mental publish
 ```
 
 ## The Visualization

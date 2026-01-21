@@ -10,6 +10,7 @@ Use `mental` to maintain the mental model as you work on the codebase.
 - `mental supersede decision <id>` - Replace a decision with a new one (keeps history)
 - `mental show` - Display the current model
 - `mental view` - Open interactive visualization
+- `mental publish` - Generate static site for GitHub Pages
 </commands>
 
 <when-to-use>

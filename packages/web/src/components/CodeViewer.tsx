@@ -1,26 +1,20 @@
 import useSWR from 'swr';
 import { codeToHtml } from 'shiki';
+import { api, type FileContent } from '../lib/api';
 
 interface CodeViewerProps {
   file: string;
   onClose: () => void;
 }
 
-interface FileData {
-  content: string;
-  language: string;
-}
-
-const fetcher = async (url: string): Promise<FileData> => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to load file: ${res.statusText}`);
-  return res.json();
+const fetcher = async (path: string): Promise<FileContent> => {
+  return api.getFile(path);
 };
 
 export function CodeViewer({ file, onClose }: CodeViewerProps) {
-  const { data, error, isLoading } = useSWR<FileData>(
-    `/api/file?path=${encodeURIComponent(file)}`,
-    fetcher
+  const { data, error, isLoading } = useSWR<FileContent>(
+    ['file', file],
+    () => fetcher(file)
   );
 
   const { data: html } = useSWR(
@@ -85,9 +79,14 @@ export function CodeViewer({ file, onClose }: CodeViewerProps) {
         )}
         {error && (
           <div className="flex items-center justify-center h-full" role="alert">
-            <div className="text-red-700 bg-red-100 border border-red-200 rounded-lg px-6 py-4">
-              <div className="font-semibold mb-1">Error</div>
-              <div className="text-sm">{error.message}</div>
+            <div className="text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-6 py-4 max-w-md">
+              <div className="font-semibold mb-1">Unable to load file</div>
+              <div className="text-sm text-red-300 mb-2">{error.message}</div>
+              {api.isStaticMode() && (
+                <div className="text-xs text-cream-45 mt-3 pt-3 border-t border-red-500/20">
+                  This file is loaded from GitHub. It may not be available if the repository is private or the file was deleted.
+                </div>
+              )}
             </div>
           </div>
         )}

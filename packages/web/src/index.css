@@ -100,7 +100,13 @@ body {
 .bg-dotted {
   background-color: #FAF7F2;
   background-image: radial-gradient(circle, rgba(44, 36, 22, 0.08) 1px, transparent 1px);
-  background-size: 18px 18px;
+  background-size: 12px 12px;
+}
+
+@media (min-width: 640px) {
+  .bg-dotted {
+    background-size: 18px 18px;
+  }
 }
 
 #root {

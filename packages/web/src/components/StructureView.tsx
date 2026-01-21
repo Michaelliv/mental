@@ -98,11 +98,11 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-col md:flex-row flex-1 min-h-0">
         {/* Three columns: Domains → Capabilities → Aspects (foundation to governance) */}
-        <div className="flex-1 flex min-w-0">
+        <div className="flex-1 flex flex-col md:flex-row min-w-0 min-h-0">
           {/* Domains column (foundation - leftmost) */}
-          <div className="flex-1 min-w-0 border-r border-border-subtle">
+          <div className="flex-1 min-w-0 max-h-[33vh] md:max-h-none overflow-auto border-b md:border-b-0 md:border-r border-border-subtle">
             <EntityColumn
               title={columnConfig.domains.title}
               entities={domains}
@@ -119,7 +119,7 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
           </div>
 
           {/* Capabilities column (actions on domains) */}
-          <div className="flex-1 min-w-0 border-r border-border-subtle">
+          <div className="flex-1 min-w-0 max-h-[33vh] md:max-h-none overflow-auto border-b md:border-b-0 md:border-r border-border-subtle">
             <EntityColumn
               title={columnConfig.capabilities.title}
               entities={capabilities}
@@ -136,7 +136,7 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
           </div>
 
           {/* Aspects column (governance - rightmost) */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 max-h-[33vh] md:max-h-none overflow-auto">
             <EntityColumn
               title={columnConfig.aspects.title}
               entities={aspects}
@@ -157,7 +157,7 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
 
       {/* Detail panel as sheet overlay */}
       <Sheet open={!!selectedEntity} onOpenChange={(open) => !open && handleCloseDetail()}>
-        <SheetContent className="w-96 p-0 bg-warm-surface [&>button]:hidden">
+        <SheetContent className="w-full sm:w-96 p-0 bg-warm-surface [&>button]:hidden">
           {selectedEntity && (
             <DetailPanel
               entity={selectedEntity}
@@ -174,7 +174,7 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
 
       {/* Code viewer as left sheet */}
       <Sheet open={!!selectedFile} onOpenChange={(open) => !open && handleCloseFile()}>
-        <SheetContent side="left" className="w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden" overlayClassName="backdrop-blur-none bg-transparent">
+        <SheetContent side="left" className="w-full sm:w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden" overlayClassName="backdrop-blur-none bg-transparent">
           {selectedFile && (
             <CodeViewer file={selectedFile} onClose={handleCloseFile} />
           )}
@@ -183,7 +183,7 @@ export function StructureView({ data, model, searchQuery }: StructureViewProps) 
 
       {/* Decision viewer as left sheet */}
       <Sheet open={!!selectedDecision} onOpenChange={(open) => !open && handleCloseDecision()}>
-        <SheetContent side="left" className="w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden" overlayClassName="backdrop-blur-none bg-transparent">
+        <SheetContent side="left" className="w-full sm:w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden" overlayClassName="backdrop-blur-none bg-transparent">
           {selectedDecision && (
             <DecisionViewer decision={selectedDecision} onClose={handleCloseDecision} />
           )}

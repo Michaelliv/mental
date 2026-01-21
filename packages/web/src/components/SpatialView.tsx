@@ -215,7 +215,7 @@ export function SpatialView({ data, model, searchQuery }: SpatialViewProps) {
 
       {/* Detail panel as sheet overlay */}
       <Sheet open={!!selectedEntity} onOpenChange={(open) => !open && handleCloseDetail()}>
-        <SheetContent className="w-96 p-0 bg-warm-surface [&>button]:hidden">
+        <SheetContent className="w-full sm:w-96 p-0 bg-warm-surface [&>button]:hidden">
           {selectedEntity && (
             <DetailPanel
               entity={selectedEntity}
@@ -234,7 +234,7 @@ export function SpatialView({ data, model, searchQuery }: SpatialViewProps) {
       <Sheet open={!!selectedFile} onOpenChange={(open) => !open && handleCloseFile()}>
         <SheetContent
           side="left"
-          className="w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden"
+          className="w-full sm:w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden"
           overlayClassName="backdrop-blur-none bg-transparent"
         >
           {selectedFile && <CodeViewer file={selectedFile} onClose={handleCloseFile} />}
@@ -245,7 +245,7 @@ export function SpatialView({ data, model, searchQuery }: SpatialViewProps) {
       <Sheet open={!!selectedDecision} onOpenChange={(open) => !open && handleCloseDecision()}>
         <SheetContent
           side="left"
-          className="w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden"
+          className="w-full sm:w-[calc(100vw-24rem)] p-0 bg-warm-surface [&>button]:hidden"
           overlayClassName="backdrop-blur-none bg-transparent"
         >
           {selectedDecision && (

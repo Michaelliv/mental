@@ -81,12 +81,12 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col bg-dotted">
       {/* Header */}
-      <header className="flex-shrink-0 px-6 py-3 border-b border-border-subtle bg-warm-deep">
-        <div className="flex items-center justify-between">
+      <header className="flex-shrink-0 px-4 sm:px-6 py-3 border-b border-border-subtle bg-warm-deep">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Left: Title and counts */}
-          <div className="flex items-center gap-6">
-            <h1 className="text-lg font-bold text-cream">Mental Model</h1>
-            <div className="flex items-center gap-4 text-xs text-cream-45">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <h1 className="text-base sm:text-lg font-bold text-cream">Mental Model</h1>
+            <div className="flex items-center gap-2 sm:gap-4 text-xs text-cream-45">
               <span>
                 <span className="text-domain">□</span> {entityCounts.domains}
               </span>
@@ -96,16 +96,16 @@ export default function App() {
               <span>
                 <span className="text-aspect">○</span> {entityCounts.aspects}
               </span>
-              <span>
+              <span className="hidden sm:inline">
                 <span className="text-decision">⚡</span> {entityCounts.decisions}
               </span>
             </div>
           </div>
 
           {/* Right: Search and view tabs */}
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Search - hidden on mobile */}
+            <div className="relative hidden sm:block">
               <label htmlFor="entity-search" className="sr-only">Search entities</label>
               <input
                 id="entity-search"
@@ -113,7 +113,7 @@ export default function App() {
                 placeholder="Search entities…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 px-3 py-1.5 pl-8 text-sm rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 bg-warm-elevated border border-border-default text-cream placeholder:text-cream-28"
+                className="w-48 md:w-64 px-3 py-1.5 pl-8 text-sm rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 bg-warm-elevated border border-border-default text-cream placeholder:text-cream-28"
               />
               <svg
                 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-cream-28"
@@ -148,7 +148,7 @@ export default function App() {
                 onClick={() => setViewMode('structure')}
                 aria-label="Columns view"
                 aria-pressed={viewMode === 'structure'}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 ${
+                className={`px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 ${
                   viewMode === 'structure'
                     ? 'bg-warm-surface text-cream shadow-sm'
                     : 'text-cream-45 hover:text-cream-60'
@@ -160,7 +160,7 @@ export default function App() {
                 onClick={() => setViewMode('spatial')}
                 aria-label="Regions view"
                 aria-pressed={viewMode === 'spatial'}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 ${
+                className={`px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/30 ${
                   viewMode === 'spatial'
                     ? 'bg-warm-surface text-cream shadow-sm'
                     : 'text-cream-45 hover:text-cream-60'

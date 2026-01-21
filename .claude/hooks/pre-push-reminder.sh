@@ -16,7 +16,7 @@ if echo "$command" | grep -qE '^\s*git\s+push'; then
 {
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
-    "additionalContext": "Before pushing: Consider if any architectural decisions or new concepts were introduced that should be recorded in the mental model. Use 'mental add decision', 'mental add domain', etc. if needed."
+    "additionalContext": "Pre-push model check:\n\n1. SEARCH the model: Use Grep on .mental/model.ndjson for key concepts you introduced\n2. CHECK for gaps:\n   - New domain concepts? (nouns - entities that exist)\n   - New capabilities? (verbs - what the system does)\n   - New aspects? (cross-cutting concerns)\n   - Architectural decisions? (why you chose A over B)\n   - Changed your mind on a previous decision? (use supersede)\n   - Removed/changed anything still documented?\n3. COMMANDS:\n   - mental add <type> --relates-to <existing> --docs <files>\n   - mental update <type> <name|id> to modify existing entities\n   - mental supersede decision <id> to replace a decision (keeps history)"
   }
 }
 EOF

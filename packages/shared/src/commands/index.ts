@@ -19,9 +19,11 @@ export {
   createUpdateDomainEvents,
   createUpdateCapabilityEvents,
   createUpdateAspectEvents,
+  createUpdateDecisionEvents,
   type UpdateDomainInput,
   type UpdateCapabilityInput,
   type UpdateAspectInput,
+  type UpdateDecisionInput,
 } from './update';
 
 // Delete command

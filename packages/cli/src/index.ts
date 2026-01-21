@@ -11,7 +11,7 @@ import { addCapability } from './commands/add-capability';
 import { addAspect } from './commands/add-aspect';
 import { addDecision } from './commands/add-decision';
 import { deleteEntity } from './commands/delete';
-import { updateDomain, updateCapability, updateAspect } from './commands/update';
+import { updateDomain, updateCapability, updateAspect, updateDecision } from './commands/update';
 import { supersedeDecision } from './commands/supersede-decision';
 import { show } from './commands/show';
 import { view } from './commands/view';
@@ -136,6 +136,17 @@ update
   .option('--cascade', 'Update references in other entities when renaming')
   .option('--json', 'Output JSON')
   .action(updateAspect);
+
+update
+  .command('decision <id>')
+  .description('Update a decision')
+  .option('--what <what>', 'New decision text')
+  .option('-w, --why <why>', 'New rationale')
+  .option('-c, --context <context>', 'New context')
+  .option('-r, --relates-to <entities>', 'New relations (format: domain:Name,capability:Name)')
+  .option('-d, --docs <docs>', 'New docs (comma-separated paths or URLs)')
+  .option('--json', 'Output JSON')
+  .action(updateDecision);
 
 // Supersede command group
 const supersede = program.command('supersede').description('Supersede entities in the mental model');

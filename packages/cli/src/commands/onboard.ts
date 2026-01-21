@@ -15,6 +15,8 @@ Use \`mental\` to maintain the mental model as you work on the codebase.
 - \`mental add capability <name>\` - Add a capability (what the system does)
 - \`mental add aspect <name>\` - Add an aspect (cross-cutting concern)
 - \`mental add decision <what> --why <reason>\` - Record a decision
+- \`mental update <type> <name|id>\` - Update an entity (--desc, --files, --relates-to, etc.)
+- \`mental supersede decision <id>\` - Replace a decision with a new one (keeps history)
 - \`mental show\` - Display the current model
 - \`mental view\` - Open interactive visualization
 </commands>
